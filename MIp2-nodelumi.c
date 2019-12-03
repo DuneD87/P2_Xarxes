@@ -10,7 +10,7 @@
 
 /* Inclusió de llibreries, p.e. #include <stdio.h> o #include "meu.h"     */
 
-#include "lumiS.h"
+#include "MIp2-lumiS.h"
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
