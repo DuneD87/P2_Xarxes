@@ -32,6 +32,7 @@ int Log_TancaFitx(int FitxLog);
 /* En termes de capes de l'aplicació, aquest conjunt de funcions externes */
 /* formen la interfície de la capa LUMI, la part del client               */
 
+
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
 /* servir només en aquest mateix fitxer. Les seves declaracions es troben */
 /* a l'inici d'aquest fitxer.                                             */
@@ -44,7 +45,7 @@ int Log_TancaFitx(int FitxLog);
 int Log_CreaFitx(const char *NomFitxLog)
 {
     FILE fit;
-    fit = fopen(NomFitxLog);
+    fit = fopen(NomFitxLog, "w");
     if(fit == NULL){
         perror("Unable to open file");
         exit(-1);
