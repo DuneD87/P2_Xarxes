@@ -14,6 +14,8 @@
 
 #include "MIp2-t.h"
 #include "MIp2-dnsC.h"
+#include "MIp2-lumiS.h"
+#include <stdio.h>
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
@@ -34,6 +36,44 @@ int Log_TancaFitx(int FitxLog);
 
 int LUMI_HaArribatAlgunaCosa(int sck)
 {
+    fd_set conjunt;
+    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
+    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
+    FD_SET(sck, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    int sel = T_HaArribatAlgunaCosa(&conjunt, sck);
+    int descActiu;
+    if (sel != -1) {
+        int i = 0;
+        for (i; i <= sck; i++)
+            if (FD_ISSET(i, &conjunt))
+                descActiu = i;
+    } else {
+        descActiu = -1;
+    }
+    return descActiu;
+}
+
+sckAdd LUMIS_TrobaAdreca(char* adMI)
+{
+    int trobat = 0;
+    int i = 0;
+    while(i!=clientsTotal && trobat == 0){
+        if(taulaClients[i].adMi == adMI){
+            trobat = 1;
+        }
+        else i++;
+    }
+    if(trobat == 0){ //ERROR O AVIS?
+        perror("User is not available");
+        exit(-1);
+    }
+    
+    return taulaClients[i].sck;
+}
+
+int LUMIS_Registre(char* adMI)
+{
+    
     
 }
 
