@@ -18,14 +18,20 @@
 
 /* DECLARACIÓ DE VARIABLES */
 const int max = 500; //mida maxima de la taula de clients
-struct data{
-    char* adMi;
+struct sckAdd{ //Per poder retornar l'adreça del socket en una funcio
     int adIP;
     int portUDP;
+};
+struct data{
+    char* adMi;
+    sckAdd sck;
     int actiu; //0 -> inactiu; 1 -> actiu
 };
 
 data taulaClients[max];
+int clientsTotal = 0;
 
 /* DECLARACIÓ DE FUNCIONS */
 int LUMI_HaArribatAlgunaCosa(int sck);
+sckAdd LUMIS_TrobaAdreca(char* adMI);
+int LUMIS_Registre(char* adMI);
