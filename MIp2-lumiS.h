@@ -16,4 +16,16 @@
 /* EXTERNES formen la interfície de la capa LUMI, la part del servidor    */
 
 
+/* DECLARACIÓ DE VARIABLES */
+const int max = 500; //mida maxima de la taula de clients
+struct data{
+    char* adMi;
+    int adIP;
+    int portUDP;
+    int actiu; //0 -> inactiu; 1 -> actiu
+};
+
+data taulaClients[max];
+
+/* DECLARACIÓ DE FUNCIONS */
 int LUMI_HaArribatAlgunaCosa(int sck);
