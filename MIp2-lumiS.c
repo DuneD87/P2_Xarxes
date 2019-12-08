@@ -12,8 +12,8 @@
 /*  (si les funcions EXTERNES es cridessin entre elles, faria falta fer   */
 /*   un #include "lumi.h")                                                */
 
-#include "t.h"
-#include "dnsC.h"
+#include "MIp2-t.h"
+#include "MIp2-dnsC.h"
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
@@ -43,7 +43,13 @@ int Log_TancaFitx(int FitxLog);
 /* bé.                                                                    */
 int Log_CreaFitx(const char *NomFitxLog)
 {
-	
+    FILE fit;
+    fit = fopen(NomFitxLog);
+    if(fit == NULL){
+        perror("Unable to open file");
+        exit(-1);
+    }
+    return fit;
 }
 
 /* Escriu al fitxer de "log" d'identificador "FitxLog" el missatge de     */
@@ -54,14 +60,24 @@ int Log_CreaFitx(const char *NomFitxLog)
 /* "log" (sense el '\0') si tot va bé                                     */
 int Log_Escriu(int FitxLog, const char *MissLog)
 {
-	
+    int mida;
+    if(mida = fputs(FitxLog,MissLog) == EOF){
+        perror("Unable to write in file");
+        exit(-1);
+    }
+    
+    return strlen(MissLog);
 }
 
 /* Tanca el fitxer de "log" d'identificador "FitxLog".                    */
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé.    */
 int Log_TancaFitx(int FitxLog)
 {
-	
+    if(fclose(FILE FitxLog) == EOF){
+        perror("Unable to close file");
+        exit(-1);
+    }
+    return 1;
 }
 
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
