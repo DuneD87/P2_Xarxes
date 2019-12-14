@@ -15,5 +15,9 @@
 /* En termes de capes de l'aplicació, aquest conjunt de funcions          */
 /* EXTERNES formen la interfície de la capa LUMI, la part del servidor    */
 
-
+//FUNCIONS COMUNES AL CLIENT/SERVIDORS
 int LUMI_HaArribatAlgunaCosa(int sck);
+int LUMI_Envia(int sck, const char * iPRem, int portRem);
+int LUMI_Rebre(int sck, char * ipRem, int *portRem);
+
+int LUMI_Registre(int sck, const char *buffer, int portTCPrem)
