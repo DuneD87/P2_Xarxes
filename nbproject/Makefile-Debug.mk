@@ -38,9 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/MIp2-agelumi.o \
 	${OBJECTDIR}/MIp2-dnsC.o \
 	${OBJECTDIR}/MIp2-lumiC.o \
-	${OBJECTDIR}/MIp2-lumiS.o \
 	${OBJECTDIR}/MIp2-mi.o \
-	${OBJECTDIR}/MIp2-nodelumi.o \
 	${OBJECTDIR}/MIp2-p2p.o \
 	${OBJECTDIR}/MIp2-t.o
 
@@ -84,20 +82,10 @@ ${OBJECTDIR}/MIp2-lumiC.o: MIp2-lumiC.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MIp2-lumiC.o MIp2-lumiC.c
 
-${OBJECTDIR}/MIp2-lumiS.o: MIp2-lumiS.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MIp2-lumiS.o MIp2-lumiS.c
-
 ${OBJECTDIR}/MIp2-mi.o: MIp2-mi.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MIp2-mi.o MIp2-mi.c
-
-${OBJECTDIR}/MIp2-nodelumi.o: MIp2-nodelumi.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MIp2-nodelumi.o MIp2-nodelumi.c
 
 ${OBJECTDIR}/MIp2-p2p.o: MIp2-p2p.c
 	${MKDIR} -p ${OBJECTDIR}

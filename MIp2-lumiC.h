@@ -14,3 +14,4 @@
 /* així les funcions seran conegudes en ell.                              */
 /* En termes de capes de l'aplicació, aquest conjunt de funcions          */
 /* EXTERNES formen la interfície de la capa LUMI, la part del client      */
+

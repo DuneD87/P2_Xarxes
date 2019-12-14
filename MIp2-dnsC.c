@@ -30,10 +30,16 @@
 /* '\0') d'una longitud qualsevol, i "IP*" és un "string" de C (vector de */
 /* chars imprimibles acabat en '\0') d'una longitud màxima de 16 chars    */
 /* (incloent '\0').                                                       */
+
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé     */
-int DNSc_ResolDNSaIP(const char *NomDNS, char *IP)
-{
-	
+int DNSc_ResolDNSaIP(const char *NomDNS, char *IP) {
+    struct hostent *dadesHOST;
+    struct in_addr adrHOST;
+    dadesHOST = gethostbyname(NomDNS);
+    if (dadesHOST == NULL) return -1;
+    adrHOST.s_addr = *((unsigned long *) dadesHOST->h_addr_list[0]);
+    strcpy(IP, (char*) inet_ntoa(adrHOST));
+    return 0;
 }
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
