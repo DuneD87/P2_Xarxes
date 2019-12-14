@@ -16,6 +16,11 @@
 #include "MIp2-dnsC.h"
 #include "MIp2-lumiS.h"
 #include <stdio.h>
+#include <ifaddrs.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
@@ -71,10 +76,14 @@ sckAdd LUMIS_TrobaAdreca(char* adMI)
     return taulaClients[i].sck;
 }
 
-int LUMIS_Registre(char* adMI)
-{
+char* LUMIS_Peticio(int sck, char* adMI){
     
+    char conf;
+    if(adMI[0] == "R") conf = LUMIS_Registre(sck, adMI);
+    else if (adMI[0] == "D") conf = LUMIS_Desregistre(sck,adMI);
+    else conf = LUMIS_Localitzacio(sck, adMI);
     
+    return conf;
 }
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
@@ -89,7 +98,7 @@ int LUMIS_Registre(char* adMI)
 int Log_CreaFitx(const char *NomFitxLog)
 {
     FILE fit;
-    fit = fopen(NomFitxLog, "w");
+    fit = fopen(NomFitxLog, "r");
     if(fit == NULL){
         perror("Unable to open file");
         exit(-1);
@@ -123,6 +132,53 @@ int Log_TancaFitx(int FitxLog)
         exit(-1);
     }
     return 1;
+}
+
+/* MÉS FUNCIONS INTERNES */
+char* LUMIS_RepLinia(int sck, char* adMI)
+{
+    char conf;
+    struct sockaddr_in adrrem;
+    int long_adrl = sizeof(adrrem);
+    if(getsockname(sck, (struct sockaddr *)&adrrem, &long_adrl) == -1)
+    {
+        conf = "C2"; //format incorrecte?
+    }
+    else
+    {
+        conf = "C0"; //registrat
+        sckAdd s;
+        strcpy(s.adIP,inet_ntoa(adrrem.sin_addr));
+        s.portUDP = ntohs(adrrem.sin_port);
+        taulaClients[clientsTotal].sck = s;
+        taulaClients[clientsTotal].actiu = 1; 
+        taulaClients[clientsTotal].adMi = adMI;
+        clientsTotal++;
+    }
+    
+    return conf;
+}
+
+char* LUMIS_Desregiste(int sck, char* adMI)
+{
+    char conf;
+    int trobat = 0;
+    int i = 0;
+    while(i<clientsTotal && trobat == 0){
+        if(taulaClients[i].adMi == adMI) trobat = 1;
+        else i++;
+    }
+    if(trobat == 1)
+    {
+        taulaClients[i].actiu = 0;
+        conf = "C0";
+    }
+    else if(trobat == 0){
+        conf = "C1";
+    }
+    else conf = "C2";
+    
+    return conf;
 }
 
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
