@@ -27,11 +27,12 @@ struct data{
     sckAdd sck;
     int actiu; //0 -> inactiu; 1 -> actiu
 };
-
+const int portUDP = 2020; 
 data taulaClients[max];
 int clientsTotal = 0;
 
 /* DECLARACIÓ DE FUNCIONS */
 int LUMI_HaArribatAlgunaCosa(int sck);
-sckAdd LUMIS_TrobaAdreca(char* adMI);
-int LUMIS_Registre(char* adMI);
+char* LUMIS_Localitzacio(int sck, char* adMI);
+char* LUMIS_Registre(int sck, char* adMI);
+char* LUMIS_Desregistre(int sck, char* adMI);
