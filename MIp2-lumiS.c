@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <search.h>
 
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
@@ -33,6 +34,9 @@
 int Log_CreaFitx(const char *NomFitxLog);
 int Log_Escriu(int FitxLog, const char *MissLog);
 int Log_TancaFitx(int FitxLog);
+int compare(const void *l, const void *r); 
+
+/******************************************************************FUNCIONS EXTERNES************************************************************/
 
 /* Definició de funcions EXTERNES, és a dir, d'aquelles que es cridaran   */
 /* des d'altres fitxers, p.e., int LUMIs_FuncioExterna(arg1, arg2...) { } */
@@ -81,10 +85,13 @@ char* LUMIS_Peticio(int sck, char* adMI){
     char conf;
     if(adMI[0] == "R") conf = LUMIS_Registre(sck, adMI);
     else if (adMI[0] == "D") conf = LUMIS_Desregistre(sck,adMI);
-    else conf = LUMIS_Localitzacio(sck, adMI);
+    else if(adMI[0] == "L")  conf = LUMIS_Localitzacio(sck, adMI);
+    else conf = "C2"; //format incorrecte
     
     return conf;
 }
+
+/***********************************************************FUNCIONS INTERNES***********************************************************************/
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
 /* servir només en aquest mateix fitxer. Les seves declaracions es troben */
@@ -135,7 +142,7 @@ int Log_TancaFitx(int FitxLog)
 }
 
 /* MÉS FUNCIONS INTERNES */
-char* LUMIS_RepLinia(int sck, char* adMI)
+char* LUMIS_Registre(int sck, char* adMI)
 {
     char conf;
     struct sockaddr_in adrrem;
@@ -146,14 +153,22 @@ char* LUMIS_RepLinia(int sck, char* adMI)
     }
     else
     {
-        conf = "C0"; //registrat
-        sckAdd s;
-        strcpy(s.adIP,inet_ntoa(adrrem.sin_addr));
-        s.portUDP = ntohs(adrrem.sin_port);
-        taulaClients[clientsTotal].sck = s;
-        taulaClients[clientsTotal].actiu = 1; 
-        taulaClients[clientsTotal].adMi = adMI;
-        clientsTotal++;
+        data *find = malloc(sizeof(data));
+        find->adMi = adMI;
+        void *cli = tfind(find,&root,compare);
+        if(cli != NULL)
+        {
+            conf = "C0";
+            sckAdd s;
+            strlcpy(s.adIP,inet_ntoa(adrrem.sin_addr)); //strcpy?
+            s.portUDP = ntohs(adrrem.sin_port);
+            (*(data**)cli)->sck = s;
+            clientsTotal++;
+        }
+        else
+        {
+         conf = "C1"; //no trobat   
+        }
     }
     
     return conf;
@@ -162,23 +177,29 @@ char* LUMIS_RepLinia(int sck, char* adMI)
 char* LUMIS_Desregiste(int sck, char* adMI)
 {
     char conf;
-    int trobat = 0;
-    int i = 0;
-    while(i<clientsTotal && trobat == 0){
-        if(taulaClients[i].adMi == adMI) trobat = 1;
-        else i++;
-    }
-    if(trobat == 1)
+    data *find = malloc(sizeof(data));
+    find->adMi = adMI;
+    void *cli = tfind(find,&root,compare);
+    if(cli != NULL)
     {
-        taulaClients[i].actiu = 0;
         conf = "C0";
+        (*(data**)cli)->sck.adIP = 0;
+        (*(data**)cli)->sck.portUDP = 0;
+        
     }
-    else if(trobat == 0){
+    else if(cli == NULL){
         conf = "C1";
     }
     else conf = "C2";
     
     return conf;
+}
+
+int compare(const void *l, const void *r)
+{
+    const data *lm = l;
+    const data *lr = r;
+    return strcmp(lm->adMi,lr->adMi);
 }
 
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
