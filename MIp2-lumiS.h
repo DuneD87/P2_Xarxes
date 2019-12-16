@@ -22,17 +22,18 @@ struct sckAdd{ //Per poder retornar l'adreça del socket en una funcio
     int adIP;
     int portUDP;
 };
+
 struct data{
     char* adMi; //farà de "key", ens servirà per fer cerques més eficients
     sckAdd sck;
 };
+
 const int portUDP = 2020; 
-data *taulaClients = malloc(data);
+data *taulaClients = malloc(data); //És una "taula" que imita un map, per fer cerques més ràpides
 int clientsTotal = 0;
-sckAdd peticionsRem[max]; //Taula per guardar adreçes de les peticions d'altres servidors
 void *root = 0;
+sckAdd peticionsRem[max]; //Taula per guardar adreçes de les peticions d'altres servidors
+
 /* DECLARACIÓ DE FUNCIONS */
 int LUMI_HaArribatAlgunaCosa(int sck);
-char* LUMIS_Localitzacio(int sck, char* adMI);
-char* LUMIS_Registre(int sck, char* adMI);
-char* LUMIS_Desregistre(int sck, char* adMI);
+char* recievefrom(int sck, char* adMI);
