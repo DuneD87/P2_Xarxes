@@ -23,14 +23,14 @@ struct sckAdd{ //Per poder retornar l'adreça del socket en una funcio
     int portUDP;
 };
 struct data{
-    char* adMi;
+    char* adMi; //farà de "key", ens servirà per fer cerques més eficients
     sckAdd sck;
-    int actiu; //0 -> inactiu; 1 -> actiu
 };
 const int portUDP = 2020; 
-data taulaClients[max];
+data *taulaClients = malloc(data);
 int clientsTotal = 0;
-
+sckAdd peticionsRem[max]; //Taula per guardar adreçes de les peticions d'altres servidors
+void *root = 0;
 /* DECLARACIÓ DE FUNCIONS */
 int LUMI_HaArribatAlgunaCosa(int sck);
 char* LUMIS_Localitzacio(int sck, char* adMI);
