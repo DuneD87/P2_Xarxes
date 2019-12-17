@@ -1,4 +1,7 @@
 /**************************************************************************/
+
+#include "MIp2-t.h"
+
 /*                                                                        */
 /* P2 - MI amb sockets TCP/IP - Part II                                   */
 /* Fitxer capçalera de lumiC.c                                            */
@@ -23,7 +26,7 @@
  *      servidor ha guardat la seva adreca i l'ha posat com a disponible
  * @return 0 si tot ha anat be, 1 si no ha trobat l'usuari
  */
-int LUMI_ferRegistre(const char * adrMiLoc);
+int LUMI_ferRegistre(int sck,char *ipRem, int portUDP,const char * adrMiLoc);
 
 /*
  * @brief Desregistra un usuari al node que li pertoca
@@ -49,4 +52,12 @@ int LUMI_localitzaUsuari(const char * adrMiRem, char * ipRem, int * portRem);
  * @post S'ha enviat un missatge a l'adreca ipRem amb port portRem
  * @return -1 si no ha funcionat, qualsevol valor positiu si funciona
  */
-int LUMI_enviaMissatge()
+int LUMI_enviaMissatge(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes, int LongSeqBytes);
+
+
+/**
+ * @brief Construeix el protocol
+ * @pre ---
+ * @post S'ha construit una cadena de caracters sense \0 ni \n amb format: R @MI
+ */
+int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre);

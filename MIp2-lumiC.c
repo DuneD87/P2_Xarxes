@@ -74,11 +74,10 @@ int Log_TancaFitx(int FitxLog)
 
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
 
-int LUMI_ferRegistre(const char* adrMiLoc)
+int LUMI_ferRegistre(int sck, char *ipRem,int portUDP, const char* adrMiLoc)
 {
     int i = 0;
     char host[40];
-    char ipRem[16];
     char c = adrMiLoc[i];
     while (c != '@')
     {
@@ -98,4 +97,29 @@ int LUMI_ferRegistre(const char* adrMiLoc)
     }
     host[j - 1] = '\0';
     DNSc_ResolDNSaIP(host,ipRem);
+    
+}
+
+int LUMI_enviaMissatge(int Sck, const char* IPrem, int portUDPrem, const char* SeqBytes, int LongSeqBytes)
+{
+    int n = UDP_EnviaA(Sck,IPrem,portUDPrem,SeqBytes,LongSeqBytes);
+    return n;
+}
+
+int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre)
+{
+    int i = 0;
+    petRegistre[i] = 'R';
+    i++;
+    int j = 0;
+    char c = adrMI[j];
+    while (c != '\0')
+    {
+        petRegistre[i] = adrMI[j];
+        i++;
+        j++;
+        c = adrMI[j];
+    }
+    //petRegistre[i - 1] = '\0';
+    printf("MISSATGE: %s",petRegistre);
 }

@@ -13,6 +13,7 @@
 
 #include "MIp2-mi.h"
 #include "MIp2-lumiC.h"
+#include <stdio.h>
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
@@ -24,10 +25,16 @@
 int main(int argc,char *argv[])
 {
     char adrLumiLoc[40];
+    char ipRem[16];
+    int portUdp = 2020;
+    int sckUdp = UDP_CreaSock("0.0.0.0",2020);
     printf("Introdueix l'adreca LUMI\n");
     int nBytes = read(0,adrLumiLoc,sizeof((adrLumiLoc)));
     adrLumiLoc[nBytes] = '\0';
-    LUMI_ferRegistre(adrLumiLoc);
+    LUMI_ferRegistre(sckUdp, ipRem,portUdp, adrLumiLoc);
+    char petRegistre[500];
+    LUMI_construeixProtocolLUMI(adrLumiLoc,petRegistre);
+    LUMI_enviaMissatge(sckUdp,ipRem,portUdp,petRegistre,nBytes + 1);
 }
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
