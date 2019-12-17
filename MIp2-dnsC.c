@@ -13,6 +13,21 @@
 /*  (si les funcions EXTERNES es cridessin entre elles, faria falta fer   */
 /*   un #include "lumi.h")                                                */
 
+
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <unistd.h>
+#include <netdb.h>
+
+
 /* Definició de constants, p.e., #define XYZ       1500                   */
 
 /* Declaració de funcions INTERNES que es fan servir en aquest fitxer     */
@@ -33,6 +48,7 @@
 
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé     */
 int DNSc_ResolDNSaIP(const char *NomDNS, char *IP) {
+    printf("yuhuuu %s \n", NomDNS);
     struct hostent *dadesHOST;
     struct in_addr adrHOST;
     dadesHOST = gethostbyname(NomDNS);

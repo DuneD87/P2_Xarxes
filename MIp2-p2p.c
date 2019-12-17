@@ -21,10 +21,14 @@
 /* fer-les conegudes des d'aquí fins al final d'aquest fitxer, p.e.,      */
 /* int FuncioInterna(arg1, arg2...);                                      */
 
-/*int main(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
-
-}*/
+    char adrLumiLoc[40];
+    printf("Introdueix l'adreca LUMI\n");
+    int nBytes = read(0,adrLumiLoc,sizeof((adrLumiLoc)));
+    adrLumiLoc[nBytes] = '\0';
+    LUMI_ferRegistre(adrLumiLoc);
+}
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
 /* servir només en aquest mateix fitxer. Les seves declaracions es troben */

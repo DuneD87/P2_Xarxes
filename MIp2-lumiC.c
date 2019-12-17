@@ -14,6 +14,7 @@
 
 #include "MIp2-t.h"
 #include "MIp2-dnsC.h"
+#include "MIp2-lumiC.h"
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -50,13 +51,7 @@ int Log_TancaFitx(int FitxLog);
 /* bé.                                                                    */
 int Log_CreaFitx(const char *NomFitxLog)
 {
-    FILE fit;
-    fit = fopen(NomFitxLog, "w");
-    if(fit == NULL){
-        perror("Unable to open file");
-        exit(-1);
-    }
-    return fit;
+    
 }
 
 /* Escriu al fitxer de "log" d'identificador "FitxLog" el missatge de     */
@@ -67,13 +62,7 @@ int Log_CreaFitx(const char *NomFitxLog)
 /* "log" (sense el '\0') si tot va bé                                     */
 int Log_Escriu(int FitxLog, const char *MissLog)
 {
-    int mida;
-    if(mida = fputs(FitxLog,MissLog) == EOF){
-        perror("Unable to write in file");
-        exit(-1);
-    }
-    
-    return strlen(MissLog);
+  
 	
 }
 
@@ -81,12 +70,32 @@ int Log_Escriu(int FitxLog, const char *MissLog)
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé.    */
 int Log_TancaFitx(int FitxLog)
 {
-    if(fclose(FILE FitxLog) == EOF){
-        perror("Unable to close file");
-        exit(-1);
-    }
-    return 1;
 }
 
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
 
+int LUMI_ferRegistre(const char* adrMiLoc)
+{
+    int i = 0;
+    char host[40];
+    char ipRem[16];
+    char c = adrMiLoc[i];
+    while (c != '@')
+    {
+         
+        i++;
+        c = adrMiLoc[i];
+    }
+    i++;//Saltem @
+    c = adrMiLoc[i];
+    int j = 0;
+    while (c != '\0')
+    {
+        host[j] = c;
+        j++;
+        i++;
+        c = adrMiLoc[i];
+    }
+    host[j - 1] = '\0';
+    DNSc_ResolDNSaIP(host,ipRem);
+}
