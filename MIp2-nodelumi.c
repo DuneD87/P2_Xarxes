@@ -13,6 +13,7 @@
 #include "MIp2-lumiS.h"
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
+#define portUDP = 2020;
 
 /* Declaració de funcions INTERNES que es fan servir en aquest fitxer     */
 /* (les  definicions d'aquestes funcions es troben més avall) per així    */
@@ -21,9 +22,39 @@
 
 int main(int argc,char *argv[])
 {
- /* Declaració de variables, p.e., int n;                                 */
+	 /* Declaració de variables, p.e., int n;                                 */
+	 char ipLoc[16];
+	 struct taulaClients taulaCli;
+	 char fitxLog[40] = "MIp2-loglumi.log";
+	 int LogFile, sckLoc, descActiu;
 
- /* Expressions, estructures de control, crides a funcions, etc.          */
+	 /* Expressions, estructures de control, crides a funcions, etc.          */
+	 
+	 //Comencem inicialitzant el servidor: llegeix la taula de client, crea socket UDP i obre el fitxer
+	 if(LUMIS_emplenaTaula(&taulaCli) == -1)
+	 {
+		 exit(-1);
+	 }
+	 
+	 if((sckLoc = LUMIS_IniciaSockEsc(ipLoc, portUDP)) == -1) //perror?
+	 {
+		 exit(-1);
+	 }
+	 
+	 if((LogFile = LUMIS_IniciaFitxer(fitxLog)) == -1)
+	 {
+		 exit(-1);
+	 } 
+	 
+	 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
+	 while(descActiu>0)
+	 {
+		 LUMIS_ServeixPeticio(sckLoc,taulaCli,LogFile);
+		 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
+	 }
+	 
+	 //LUMIS_Finalitza(sck);
+	return 0;
 
  }
 
