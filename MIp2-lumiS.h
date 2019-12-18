@@ -7,6 +7,23 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Declaració de TIPUS de variables                                       */
+
+typedef struct sckAdd{ 
+    char adIP[16];
+    int portUDP;
+} sckAdd;
+
+typedef struct data{
+    char adMi[40]; 
+    sckAdd sck;
+} data;
+
+typedef struct taulaClients{
+	data taulaCli[200];
+	int size;
+} taulaClients;
+
 /* Declaració de funcions EXTERNES de lumiS.c, és a dir, d'aquelles       */
 /* funcions que es faran servir en un altre fitxer extern a lumiS.c,      */
 /* p.e., int LUMIs_FuncioExterna(arg1, arg2...) { }                       */
@@ -16,24 +33,11 @@
 /* EXTERNES formen la interfície de la capa LUMI, la part del servidor    */
 
 
-/* DECLARACIÓ DE VARIABLES */
-const int max = 500; //mida maxima de la taula de clients
-struct sckAdd{ //Per poder retornar l'adreça del socket en una funcio
-    int adIP;
-    int portUDP;
-};
+/* DECLARACIÓ DE FUNCIONS EXTERNES */
+int LUMIS_HaArribatAlgunaCosa(int sck);
+int LUMIS_emplenaTaula(taulaClients *taulaCli);
+int LUMIS_IniciaSockEsc(char* iploc, int portUDP);
+int LUMIS_IniciaFitxer(const char* nomFitx);
+int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile);
+int LUMIS_Finalitza(int sck);
 
-struct data{
-    char* adMi; //farà de "key", ens servirà per fer cerques més eficients
-    sckAdd sck;
-};
-
-const int portUDP = 2020; 
-data *taulaClients = malloc(data); //És una "taula" que imita un map, per fer cerques més ràpides
-int clientsTotal = 0;
-void *root = 0;
-sckAdd peticionsRem[max]; //Taula per guardar adreçes de les peticions d'altres servidors
-
-/* DECLARACIÓ DE FUNCIONS */
-int LUMI_HaArribatAlgunaCosa(int sck);
-char* recievefrom(int sck, char* adMI);
