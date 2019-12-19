@@ -11,9 +11,11 @@
 /* Inclusió de llibreries, p.e. #include <stdio.h> o #include "meu.h"     */
 
 #include "MIp2-lumiS.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 /* Definició de constants, p.e., #define XYZ       1500                   */
-#define portUDP = 2020;
+#define PORTUDP 2020
 
 /* Declaració de funcions INTERNES que es fan servir en aquest fitxer     */
 /* (les  definicions d'aquestes funcions es troben més avall) per així    */
@@ -26,7 +28,7 @@ int main(int argc,char *argv[])
 	 char ipLoc[16];
 	 struct taulaClients taulaCli;
 	 char fitxLog[40] = "MIp2-loglumi.log";
-	 int LogFile, sckLoc, descActiu;
+	 int LogFile, descActiu, sckLoc;
 
 	 /* Expressions, estructures de control, crides a funcions, etc.          */
 	 
@@ -36,7 +38,7 @@ int main(int argc,char *argv[])
 		 exit(-1);
 	 }
 	 
-	 if((sckLoc = LUMIS_IniciaSockEsc(ipLoc, portUDP)) == -1) //perror?
+	 if((sckLoc = LUMIS_IniciaSockEsc(ipLoc, PORTUDP)) == -1) //perror?
 	 {
 		 exit(-1);
 	 }
@@ -49,7 +51,7 @@ int main(int argc,char *argv[])
 	 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
 	 while(descActiu>0)
 	 {
-		 LUMIS_ServeixPeticio(sckLoc,taulaCli,LogFile);
+		 LUMIS_ServeixPeticions(sckLoc,&taulaCli,LogFile);
 		 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
 	 }
 	 
