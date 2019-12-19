@@ -26,7 +26,7 @@
 
 /* Definició de constants, p.e., #define XYZ       1500 */
 
-#define MAX 500;
+#define MAX 500
 const char fitxNodeLumi[50] = "nodelumi.cfg";
 
 //sckAdd peticionsRem[max]; //Taula per guardar adreçes de les peticions d'altres servidors
