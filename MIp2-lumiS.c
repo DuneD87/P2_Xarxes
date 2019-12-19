@@ -44,8 +44,9 @@ int LUMIS_getsock(int sck, char* ip, int *port);
 int LUMIS_RecieveFrom(int sck, char* linia, int longSeqBytes, char* iprem, int *portrem);
 int LUMIS_SendTo(int sck, char*resp, int longSeqBytes);
 int LUMIS_Registre(taulaClients *taulaCli, int fitxLog, char* linia, int mida, char* resp, char *ip, int *port);
-int LUMIS_Desregistre(taulaClients *taulaCli, char* linia, int mida, char* resp);
-int LUMIS_Localitzacio(taulaClients *taulaCli, char* linia, int mida, char* resp);
+int LUMIS_Desregistre(taulaClients *taulaCli, int fitxLog, char* linia, int mida, char* resp);
+int LUMIS_Localitzacio(taulaClients *taulaCli, int fitxLog, char* linia, int mida, char* resp);
+int UDP_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck);
 
 /******************************************************************FUNCIONS EXTERNES************************************************************/
 
@@ -60,7 +61,7 @@ int LUMIS_HaArribatAlgunaCosa(int sck)
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
     FD_SET(sck, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosa(&conjunt, sck);
+    int sel = UDP_HaArribatAlgunaCosa(&conjunt, sck);
     int descActiu;
     if (sel != -1) {
         int i = 0;
@@ -110,7 +111,7 @@ int LUMIS_emplenaTaula(taulaClients *taulaCli)
 	}
 	while(fgets(taulaCli->taulaCli[taulaCli->size].adMi,40,fpt) != NULL)
 	{
-		taulaCli->taulaCli[taulaCli->size].sck.adIP = "0.0.0.0";
+		strcpy(taulaCli->taulaCli[taulaCli->size].sck.adIP,"0.0.0.0");
 		taulaCli->taulaCli[taulaCli->size].sck.portUDP = 0;
 		taulaCli->size++;
 	}
@@ -138,9 +139,9 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile)
 	}
 	miss[bytes_llegits] = '\0';
 	if(miss[0] == 'R') err = LUMIS_Registre(taulaCli, logFile, miss, bytes_llegits, resp, iprem, portrem);
-	else if (miss[0] == 'D') err = LUMIS_Desregistre(taulaCli, logFile, resp);
-	else if (miss[0] == 'L') err = LUMIS_Localitzacio(taulaCli, logFile, resp);
-	else resp = "C2"; // format incorrecte o desconegut
+	else if (miss[0] == 'D') err = LUMIS_Desregistre(taulaCli, logFile, miss, bytes_llegits, resp);
+	else if (miss[0] == 'L') err = LUMIS_Localitzacio(taulaCli, logFile, miss, bytes_llegits, resp);
+	else strcpy(resp,"C2");
 	
 	if((bytes_enviats = LUMIS_SendTo(sck, resp, strlen(resp))) == -1)
 	{
@@ -164,7 +165,7 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile)
 /* bé.                                                                    */
 int Log_CreaFitx(const char *NomFitxLog)
 {
-    return open(nomFitx, O_CREAT | O_RDWR | O_APPEND);
+    return open(NomFitxLog, O_CREAT | O_RDWR | O_APPEND);
 }
 
 /* Escriu al fitxer de "log" d'identificador "FitxLog" el missatge de     */
@@ -216,28 +217,28 @@ int LUMIS_SendTo(int sck, char *resp, int longSeqBytes)
 	return bytes_escrits;
 }
 
-int LUMIS_Registre(taulaClients *taulaCli, char* linia, int mida, char* resp, char *ip, int *port)
+int LUMIS_Registre(taulaClients *taulaCli, int fitxLog, char* linia, int mida, char* resp, char *ip, int *port)
 {
 	int trobat = -1;
 	int i = 0;
 	char adMI[40];
 	strcpy(adMI,linia+1);
-	while(i<taulaCli.size && trobat != 1)
+	while(i<taulaCli->size && trobat != 1)
 	{
 		if(strcmp(adMI, taulaCli->taulaCli[i].adMi) == 0) trobat = 1;
 		else i++;
 	}
 	if(trobat == 1)
 	{
-		taulaCli->taulaCli[i].sck.adIP = ip;
+		strcpy(taulaCli->taulaCli[i].sck.adIP,ip);
 		taulaCli->taulaCli[i].sck.portUDP = port;
-		resp = "C0"; //ok
+		strcpy(resp, "C0");//ok
 	}
-	else resp "C1"; //usuari no trobat, innexistent
+	else strcpy(resp, "C1"); //usuari no trobat, innexistent
 	
 	return trobat;
 }
-int LUMIS_Desregistre(int sck, char* linia, int mida, char* resp)
+int LUMIS_Desregistre(taulaClients * taulaCli, int fitxLog, char* linia, int mida, char* resp)
 {
     /*int err = 1;
     data *find = malloc(sizeof(data));
@@ -258,7 +259,7 @@ int LUMIS_Desregistre(int sck, char* linia, int mida, char* resp)
     return err;*/
 }
 
-int LUMIS_Localitzacio(int sck, char* linia, int mida, char* resp) //Falta el cas on el servidor és diferent!!
+int LUMIS_Localitzacio(taulaClients *taulaCli, int fitxLog,  char* linia, int mida, char* resp) //Falta el cas on el servidor és diferent!!
 {
     /*int err;
     data *find = malloc(sizeof(data));
@@ -299,6 +300,13 @@ int LUMIS_getsock(int sck, char *ip, int *port)
 	return  err;
 }
 
+int UDP_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck)
+{
+	int sel = select(LongLlistaSck+1, LlistaSck, NULL, NULL, NULL);
+	return sel;
+}
+
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
+
 
 
