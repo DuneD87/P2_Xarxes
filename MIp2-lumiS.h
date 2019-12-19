@@ -41,3 +41,4 @@ int LUMIS_IniciaFitxer(const char* nomFitx);
 int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile);
 int LUMIS_Finalitza(int sck);
 
+
