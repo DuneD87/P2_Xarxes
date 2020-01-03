@@ -244,19 +244,28 @@ int TCP_TrobaAdrSockRem(int Sck, char *IPrem, int *portTCPrem) {
 
 /* va bé.                                                                 */
 int UDP_CreaSock(const char *IPloc, int portUDPloc) {
-    int scon, i;
     struct sockaddr_in adrloc;
-
-    if (scon = socket(AF_INET, SOCK_DGRAM, 0) == -1)
-        scon = -1;
+    int sck, i;
+    /* Es crea el socket UDP sck del servidor */
+    /* adreça (@IP i #port UDP) assignada. */
+    if ((sck = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+        sck = -1;
+    }
     adrloc.sin_family = AF_INET;
     adrloc.sin_port = htons(portUDPloc);
-    adrloc.sin_addr.s_addr = inet_addr(IPloc);
-    for (i = 0; i < 8; i++)
+    adrloc.sin_addr.s_addr = inet_addr(IPloc); //INADR_ANY?
+    for (i = 0; i < 8; i++) {
         adrloc.sin_zero[i] = '\0';
-    if ((bind(scon, (struct sockaddr*) &adrloc, sizeof (adrloc))) == -1) 
-        scon = -1;
-    return scon;
+    }
+    if ((bind(sck, (struct sockaddr*) &adrloc, sizeof (adrloc))) == -1) {
+
+        sck = -1;
+    }
+    /* Es crea una cua per emmagatzemar peticions de connexió pendents.
+    if ((listen(sck, 3)) == -1) {
+                    sck = -1;
+    }*/
+    return sck;
 }
 
 /* Envia a través del socket UDP d’identificador “Sck” la seqüència de    */
@@ -273,7 +282,8 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
     adrrem.sin_family = AF_INET;
     adrrem.sin_port = htons(portUDPrem);
     adrrem.sin_addr.s_addr = inet_addr(IPrem);
-    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, sizeof (adrrem));
+    int laddRem = sizeof(adrrem);
+    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, &laddRem);
     return nBytes;
 }
 
@@ -289,10 +299,14 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
 
 /* Retorna -1 si hi ha error; el nombre de bytes rebuts si tot va bé.     */
 int UDP_RepDe(int Sck, char *IPrem, int *portUDPrem, char *SeqBytes, int LongSeqBytes) {
-    struct sockaddr_in addrloc;
-    int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrloc, sizeof (addrloc));
-    strcpy(IPrem, inet_ntoa(addrloc.sin_addr));
-    portUDPrem = htons(addrloc.sin_port);
+    struct sockaddr_in addrrem;
+    int laddRem;
+    laddRem = sizeof(addrrem);
+    int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrrem,&laddRem);
+    //UDP_TrobaAdrSockRem(Sck,IPrem,&(*portUDPrem));
+    strcpy(IPrem, inet_ntoa(addrrem.sin_addr));
+    portUDPrem = htons(addrrem.sin_port);
+    
     return nBytes;
 }
 
@@ -379,6 +393,22 @@ int UDP_TrobaAdrSockRem(int Sck, char *IPrem, int *portUDPrem) {
 /* sockets, retorna l’identificador d’aquest socket.                      */
 int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck) {
     int sel = select(LongLlistaSck + 1, LlistaSck, NULL, NULL, NULL);
+    return sel;
+}
+
+/* Examina simultàniament i sense límit de temps (una espera indefinida)  */
+/* els sockets (poden ser TCP, UDP i stdin) amb identificadors en la      */
+/* llista “LlistaSck” (de longitud “LongLlistaSck” sockets) per saber si  */
+/* hi ha arribat alguna cosa per ser llegida.                             */
+/* "LlistaSck" és un vector d'enters d'una longitud >= LongLlistaSck      */
+/* Retorna -1 si hi ha error; si arriba alguna cosa per algun dels        */
+
+/* sockets, retorna l’identificador d’aquest socket.                      */
+int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck,int temps) {
+    struct timeval tv;
+    tv.tv_sec = temps;
+    tv.tv_usec = 0;
+    int sel = select(LongLlistaSck + 1, LlistaSck, NULL, NULL,&tv);
     return sel;
 }
 

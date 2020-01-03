@@ -54,6 +54,14 @@ int LUMI_localitzaUsuari(const char * adrMiRem, char * ipRem, int * portRem);
  */
 int LUMI_enviaMissatge(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes, int LongSeqBytes);
 
+/**
+ * @brief Rep un missatge
+ * @pre ---
+ * @post S'ha rebut un missatge del socket i s'ha actualitzat la IP remota i el port remot
+ * @return -1 si no ha funcionat, qualsevol valor positiu si funciona
+ */
+int LUMI_repMissatge(int Sck, char *IPrem, int *portUDPrem, char *seqBytes, int LongSeqBytes);
+
 
 /**
  * @brief Construeix el protocol
@@ -61,3 +69,17 @@ int LUMI_enviaMissatge(int Sck, const char *IPrem, int portUDPrem, const char *S
  * @post S'ha construit una cadena de caracters sense \0 ni \n amb format: R @MI
  */
 int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre);
+
+/**
+ * @brief Ens diu si ha arribat alguna cosa
+ * @pre ---
+ * @post Retorna el descriptor actiu del socket per el qual ens ha arribat un missatge
+ */
+int LUMI_haArribatAlgunaCosa(int sck);
+
+/**
+ * @brief Ens diu si ha arribat alguna cosa en temps (segons)
+ * @pre Temps >= 0
+ * @post Retorna el descriptor actiu del socket per el qual ens ha arribat un missatge
+ */
+int LUMI_haArribatAlgunaCosaEnTemps(int sck,int temps);
