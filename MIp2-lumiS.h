@@ -36,7 +36,7 @@ typedef struct taulaClients{
 /* DECLARACIÓ DE FUNCIONS EXTERNES */
 int LUMIS_HaArribatAlgunaCosa(int sck);
 int LUMIS_emplenaTaula(taulaClients *taulaCli);
-int LUMIS_IniciaSockEsc(char* iploc, int portUDP);
+int LUMIS_IniciaSockEsc(const char* iploc, int portUDP);
 int LUMIS_IniciaFitxer(const char* nomFitx);
 int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile);
 int LUMIS_Finalitza(int sck);

@@ -20,45 +20,46 @@
 /* Declaració de funcions INTERNES que es fan servir en aquest fitxer     */
 /* (les  definicions d'aquestes funcions es troben més avall) per així    */
 /* fer-les conegudes des d'aquí fins al final d'aquest fitxer, p.e.,      */
+
 /* int FuncioInterna(arg1, arg2...);                                      */
 
-int main(int argc,char *argv[])
-{
-	 /* Declaració de variables, p.e., int n;                                 */
-	 char ipLoc[16];
-	 struct taulaClients taulaCli;
-	 char fitxLog[40] = "MIp2-loglumi.log";
-	 int LogFile, descActiu, sckLoc;
+int main(int argc, char *argv[]) {
+    /* Declaració de variables, p.e., int n;                                 */
+    char ipLoc[16];
+    struct taulaClients taulaCli;
+    char fitxLog[40] = "MIp2-loglumi.log";
+    int LogFile, descActiu, sckLoc;
+    strcpy(ipLoc,"0.0.0.0");
+    /* Expressions, estructures de control, crides a funcions, etc.          */
 
-	 /* Expressions, estructures de control, crides a funcions, etc.          */
-	 
-	 //Comencem inicialitzant el servidor: llegeix la taula de client, crea socket UDP i obre el fitxer
-	 if(LUMIS_emplenaTaula(&taulaCli) == -1)
-	 {
-		 exit(-1);
-	 }
-	 
-	 if((sckLoc = LUMIS_IniciaSockEsc(ipLoc, PORTUDP)) == -1) //perror?
-	 {
-		 exit(-1);
-	 }
-	 
-	 if((LogFile = LUMIS_IniciaFitxer(fitxLog)) == -1)
-	 {
-		 exit(-1);
-	 } 
-	 
-	 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
-	 while(descActiu>0)
-	 {
-		 LUMIS_ServeixPeticions(sckLoc,&taulaCli,LogFile);
-		 descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
-	 }
-	 
-	 //LUMIS_Finalitza(sck);
-	return 0;
+    //Comencem inicialitzant el servidor: llegeix la taula de client, crea socket UDP i obre el fitxer
+    if (LUMIS_emplenaTaula(&taulaCli) == -1) {
+        printf("Error al emplenar taula\n");
+        exit(-1);
+    }
 
- }
+    if ((sckLoc = LUMIS_IniciaSockEsc(ipLoc, 2020)) == -1) //perror?
+    {
+        printf("Error en inicia socket de escolta\n");
+        exit(-1);
+    }
+
+    /*if ((LogFile = LUMIS_IniciaFitxer(fitxLog)) == -1) {
+        printf("Error en iniciar el fitxer log\n");
+        exit(-1);
+    }*/
+    printf("ESCOLTEM\n");
+    descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
+    printf("I RUMIEM!\n");
+    while (descActiu > 0) {
+        LUMIS_ServeixPeticions(sckLoc, &taulaCli, LogFile);
+        descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
+    }
+    printf("FI SESSIO\n");
+    LUMIS_Finalitza(sckLoc);
+    return 0;
+
+}
 
 /* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
 /* servir només en aquest mateix fitxer. Les seves declaracions es troben */

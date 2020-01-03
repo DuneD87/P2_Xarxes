@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
-CND_ARTIFACT_NAME_Debug=p2_xarxes
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/p2_xarxes
+CND_ARTIFACT_NAME_Debug=p2_xarxes_server
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/p2_xarxes_server
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
-CND_PACKAGE_NAME_Debug=p2xarxes.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/p2xarxes.tar
+CND_PACKAGE_NAME_Debug=p2xarxesserver.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/p2xarxesserver.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
-CND_ARTIFACT_NAME_Release=p2_xarxes
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/p2_xarxes
+CND_ARTIFACT_NAME_Release=p2_xarxes_server
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/p2_xarxes_server
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
-CND_PACKAGE_NAME_Release=p2xarxes.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/p2xarxes.tar
+CND_PACKAGE_NAME_Release=p2xarxesserver.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/p2xarxesserver.tar
 #
 # include compiler specific variables
 #
