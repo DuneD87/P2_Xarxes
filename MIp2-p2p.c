@@ -91,8 +91,30 @@ int conversa(int scon) {
     return bytesLlegits;
 }
 
-void construirMissatgeResp() {
-
+void construirMissatgeLocResp(int sckUdp, int sckTCP,const char * miss, const char * ipLoc, int portTcp, const char * ipRem, int portUdp) {
+    char adrMiDest[40];
+    //Primer obtenim l'adreca LUMI del preguntador de L@Preguntada:@Preguntador
+    int i = 1;
+    while (miss[i] != ':')
+    {
+        i++;
+    }
+    i++;
+    int j = 0;
+    while (miss[i] != '\0')
+    {
+        adrMiDest[j] = miss[i];
+        i++;
+        j++;
+    }
+    adrMiDest[j] = '\0';
+    char missLocResp[500];
+    char portTCParray[10];
+    int n = sprintf(portTCParray,"%d",portTcp);
+    int nBytes = j + n + 12;
+    snprintf(missLocResp,nBytes,"l0%s:0.0.0.0:%s",adrMiDest,portTCParray);
+    //printf("Missatge a enviar: %s amb %d bytes",missLocResp,n);
+    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
 }
 
 void construirMissatgeLoc(int sckUdp, const char *ipRem, int portUdp, const char * miss, const char * adrLumiLoc, int nBytesLoc) {
@@ -102,12 +124,12 @@ void construirMissatgeLoc(int sckUdp, const char *ipRem, int portUdp, const char
     char missLoc[500];
     adrLumiRem[nBytesRem - 1] = '\0';
     int nBytesMissLoc = nBytesLoc + nBytesRem + 2;
-    snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiLoc, adrLumiRem);
+    snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
     printf("Missatge al client: %s\nNombre de bytes: %d\n",missLoc,nBytesRem);
     LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesMissLoc - 1);
 }
 
-void parlarAmbServidor(char * ipDesti, int * portTCP, int *portTCPLoc) {
+void parlarAmbServidor(char * ipDesti, int * portTCP, int portTCPLoc, const char * ipLoc,int sckTCP) {
     char adrLumiLoc[40], ipRem[16], petRegistre[500], missResposta[500];
     int portUdp = 2020;
     strcpy(ipRem, "0.0.0.0");
@@ -124,6 +146,7 @@ void parlarAmbServidor(char * ipDesti, int * portTCP, int *portTCPLoc) {
     while (respObtg == 0) {
         if (descActiu == sckUdp) {
             int nBytes = LUMI_repMissatge(sckUdp, ipRem, portUdp, missResposta, sizeof (petRegistre));
+            
             if (step == 0) {
                 if (missResposta[0] == 'C') {
                     if (missResposta[1] == '0') {
@@ -134,7 +157,7 @@ void parlarAmbServidor(char * ipDesti, int * portTCP, int *portTCPLoc) {
                         int opcio;
                         scanf("%d", &opcio);
                         while (opcio != 0 && opcio != 1) {
-                            printf("Opcio incorrecte\n");
+                            printf("Opcio incorrecte!\n");
                             printf("Selecciona una opcio:\n[0]Localitzar un usuari\n[1]Esperar connexio\n");
                             scanf("%d", &opcio);
                         }
@@ -147,12 +170,14 @@ void parlarAmbServidor(char * ipDesti, int * portTCP, int *portTCPLoc) {
                 if (missResposta[0] != 'l') {//Encara no hem demanat al servidor
                     construirMissatgeLoc(sckUdp,ipRem,portUdp,missResposta,adrLumiLoc,nBytesLoc);
                 } else {//Hem obtingut resposta del client..
-                    
+                    printf("Missatge obtingut: %s\n",missResposta);
                 }
             } else if (step == 2) {
                 if (missResposta[0] == 'L') {
                     //Ens arriba una peticio de localitzacio, construim missatge de resposta
+                    missResposta[nBytes] = '\0';
                     printf("Hola soc la varsha i tinc una peticio de localitzacio, que faig ??\n");
+                    construirMissatgeLocResp(sckUdp,sckTCP,missResposta,ipLoc,portTCPLoc,ipRem,portUdp);
                 }
             }
 
@@ -178,7 +203,7 @@ int main(int argc, char *argv[]) {
     aux = MI_getsockname(sesc, ipLoc, &portTCPloc);
     if (aux == -1) mostrarError();
     printf("Port d'escolta escollit pel SO: %d\n", portTCPloc);
-    parlarAmbServidor(ipRem, portTCPrem, &portTCPloc);
+    parlarAmbServidor(ipRem, &portTCPrem, portTCPloc,ipLoc,sesc);
     while (continuar == 'S') {
         int scon = connexio(sesc, ipRem, ipLoc, nicLoc, nicRem, &portTCPloc, &portTCPrem);
         if (scon != -1) {

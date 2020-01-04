@@ -83,3 +83,10 @@ int LUMI_haArribatAlgunaCosa(int sck);
  * @post Retorna el descriptor actiu del socket per el qual ens ha arribat un missatge
  */
 int LUMI_haArribatAlgunaCosaEnTemps(int sck,int temps);
+
+/**
+ * @brief Obte IP i Port UDP
+ * @pre ---
+ * @post Donat un socket UDP, ens dona la IP i port UDP associats a aquest socket
+ */
+int LUMI_trobarSckNom(int sckUDP, char * ipLoc, int * portLoc );

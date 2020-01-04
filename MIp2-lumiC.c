@@ -162,3 +162,7 @@ int LUMI_haArribatAlgunaCosaEnTemps(int sck, int temps) {
     }
     return descActiu;
 }
+
+int LUMI_trobarSckNom(int sckUDP, char* ipLoc, int * portLoc) {
+    return UDP_TrobaAdrSockLoc(sckUDP,ipLoc,&portLoc);
+}
