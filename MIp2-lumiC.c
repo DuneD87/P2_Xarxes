@@ -92,7 +92,7 @@ int LUMI_ferRegistre(int sck, char *ipRem, int portUDP, const char* adrMiLoc) {
         i++;
         c = adrMiLoc[i];
     }
-    host[j - 1] = '\0';
+    host[j] = '\0';
     DNSc_ResolDNSaIP(host, ipRem);
 }
 
@@ -118,9 +118,7 @@ int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre) {
         i++;
         j++;
         c = adrMI[j];
-    }
-    //petRegistre[i - 1] = '\0';
-    printf("MISSATGE: %s", petRegistre);
+    } 
 }
 
 int LUMI_IniciaSckEscolta(const char *ipLoc, int portUDP) {

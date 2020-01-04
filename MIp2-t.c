@@ -282,8 +282,7 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
     adrrem.sin_family = AF_INET;
     adrrem.sin_port = htons(portUDPrem);
     adrrem.sin_addr.s_addr = inet_addr(IPrem);
-    int laddRem = sizeof(adrrem);
-    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, &laddRem);
+    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, sizeof(adrrem));
     return nBytes;
 }
 

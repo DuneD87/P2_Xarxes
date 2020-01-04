@@ -48,7 +48,6 @@
 
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé     */
 int DNSc_ResolDNSaIP(const char *NomDNS, char *IP) {
-    printf("yuhuuu %s \n", NomDNS);
     struct hostent *dadesHOST;
     struct in_addr adrHOST;
     dadesHOST = gethostbyname(NomDNS);
