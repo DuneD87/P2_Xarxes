@@ -88,10 +88,10 @@ int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
     if (client[0] == 'R') {
         client[nBytes - 1] = '\0';
         strcpy(adMI, client + 1);
-    } else 
+    } else
         strcpy(adMI, client);
 
-    
+
     int bytesAdMi = strlen(adMI);
     while (i < taulaCli->size && trobat != 1) {
         if (strncmp(adMI, taulaCli->taulaCli[i].adMi, bytesAdMi) == 0) {
@@ -123,7 +123,7 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
         exit(-1);
     }
     miss[bytes_llegits - 1] = '\0';
-    printf("MISSATGE REBUT: %s\n",miss);
+    printf("MISSATGE REBUT: %s\n", miss);
     if (miss[0] == 'R') { //Client demana registre
         int index = LUMIS_cercarClient(taulaCli, miss, bytes_llegits);
         if (index != -1) {//Client trobat a la taula, procedim a fer registre
@@ -145,27 +145,59 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
 
     } else if (miss[0] == 'L') { //Client demana localitzar un usuari
         char adrMiDest[40]; //El preguntat
-        
-        int i = 1;
-        while (miss[i] != ':') {
-            //adrMiOrig[i] = miss[i];
-            i++;
-        }
-        i++; //Saltem :
-        int j = 0; //indexem com deu mana
-        while (i < bytes_llegits) {
-            adrMiDest[j] = miss[i];
+
+        int j = 1;
+        int i = 0;
+        while (miss[j] != ':') {
+            adrMiDest[i] = miss[j];
             i++;
             j++;
         }
-        adrMiDest[j] = '\0';
+
+        adrMiDest[i] = '\0';
         int index = LUMIS_cercarClient(taulaCli, adrMiDest, bytes_llegits);
         if (index != -1) {//Client trobat a la taula. Li enviem missatge de localitzacio
             char ipDest[16];
-            strcpy(ipDest,taulaCli->taulaCli[index].sck.adIP);
+            strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
             int portDest = taulaCli->taulaCli[index].sck.portUDP;
             LUMIS_EnviaA(sck, ipDest, *(&portDest), miss, bytes_llegits - 1);
         }
+    } else if (miss[0] == 'l') { //Servidor rep resposta de localitzacio
+        //ex l0duned@PC-b:0.0.0.0:3452
+        //primer obtenim l'usuari al que hem de enviar
+        char adrMiDest[40];
+        int i = 2; // ens situem a la segona posicio
+        int nBytesAdrMi = 0;
+        while (miss[i] != ':') {
+            adrMiDest[nBytesAdrMi] = miss[i];
+            i++;
+            nBytesAdrMi++;
+        }
+        adrMiDest[nBytesAdrMi] = '\0';
+        int index = LUMIS_cercarClient(taulaCli, adrMiDest, nBytesAdrMi);
+        //Seguidament obtenim el port
+        i++; //saltem :
+        while (miss[i] != ':') {
+            i++; //saltem camp IP
+        }
+        i++; //saltem :
+        char portTCP[10];
+        int j = 0;
+        while (miss[i] != '\0') {
+            portTCP[j] = miss[i];
+            i++;
+            j++;
+        }
+        portTCP[j] = '\0';
+        //Construim el missatge
+        char respLoc[500];
+        int nBytes = nBytesAdrMi + j + strlen(ipRem) + 5;
+        snprintf(respLoc, nBytes, "l0%s:%s:%s", adrMiDest, ipRem, portTCP);
+        printf("%s\n",respLoc);
+        char ipDest[16];
+        strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
+        int portDest = taulaCli->taulaCli[index].sck.portUDP;
+        LUMIS_EnviaA(sck, ipDest, *(&portDest), respLoc, nBytes);
     }
 }
 
