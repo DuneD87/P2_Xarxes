@@ -282,8 +282,7 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
     adrrem.sin_family = AF_INET;
     adrrem.sin_port = htons(portUDPrem);
     adrrem.sin_addr.s_addr = inet_addr(IPrem);
-    int laddRem = sizeof(adrrem);
-    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, &laddRem);
+    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, sizeof(adrrem));
     return nBytes;
 }
 
@@ -305,8 +304,7 @@ int UDP_RepDe(int Sck, char *IPrem, int *portUDPrem, char *SeqBytes, int LongSeq
     int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrrem,&laddRem);
     //UDP_TrobaAdrSockRem(Sck,IPrem,&(*portUDPrem));
     strcpy(IPrem, inet_ntoa(addrrem.sin_addr));
-    portUDPrem = htons(addrrem.sin_port);
-    
+    *portUDPrem = htons(addrrem.sin_port);
     return nBytes;
 }
 
