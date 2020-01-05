@@ -174,3 +174,107 @@ int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
 int LUMI_trobarSckNom(int sckUDP, char* ipLoc, int * portLoc) {
     return UDP_TrobaAdrSockLoc(sckUDP,ipLoc,&portLoc);
 }
+
+int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, char* ipRem, int nBytesLoc) {
+    char petRegistre[500];
+    LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
+    LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
+    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+    int descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+    int resultat = 0;
+    int nIntents = 0;
+    while (resultat == 0) {
+        if (descActiu == sckUdp) {
+            int nBytes = LUMI_repMissatge(sckUdp, ipRem, portUdp, miss, sizeof (miss));
+            if (miss[0] == 'C' && miss[1] == '0') {
+                printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
+                resultat = 1;
+            }
+        } else {
+            if (nIntents < 5) {
+                printf("Numero d'intents: %d. Reintentan...\n", nIntents);
+                nIntents++;
+                LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+                descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+            } else {
+                resultat = -1;
+            }
+        }
+
+    }
+    return resultat;
+}
+
+int LUMI_construirMissatgeLoc(int sckUdp, const char* ipRem, int portUdp, const char* miss, const char* adrLumiLoc, int nBytesLoc) {
+    char adrLumiRem[40];
+
+    int nBytesRem = read(0, adrLumiRem, 40);
+    char missLoc[500];
+    adrLumiRem[nBytesRem - 1] = '\0';
+    int nBytesMissLoc = nBytesLoc + nBytesRem + 2;
+    snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
+    printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
+    int n = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesMissLoc - 1);
+    
+    return n;
+}
+
+void LUMI_extreureIpPort(const char* miss, char* ipDesti, int* portTcp) {
+     //ex l0duned@PC-b:100.10.10.103:45232
+    int i = 0;
+    while (miss[i] != ':') {
+        i++; //saltem fins trobar IP
+    }
+    i++; //saltem :
+    int j = 0;
+    while (miss[i] != ':') {
+        ipDesti[j] = miss[i];
+        i++;
+        j++;
+    }
+    ipDesti[j] = '\0';
+    i++; //saltem :
+    int k = 0;
+    while (miss[i] != '\0') {
+        k = ((miss[i]) - '0') + k * 10;
+        i++;
+    }
+    *(portTcp) = k;
+}
+
+int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char* miss, const char* ipLoc, int portTcp, const char* ipRem, int portUdp) {
+    char adrMiDest[40];
+    //Primer obtenim l'adreca LUMI del preguntador de L@Preguntada:@Preguntador
+    int i = 1;
+    while (miss[i] != ':') {
+        i++;
+    }
+    i++;
+    int j = 0;
+    while (miss[i] != '\0') {
+        adrMiDest[j] = miss[i];
+        i++;
+        j++;
+    }
+    adrMiDest[j] = '\0';
+    char missLocResp[500];
+    char portTCParray[10];
+    int n = sprintf(portTCParray, "%d", portTcp);
+    int nBytes = j + n + 12;
+    snprintf(missLocResp, nBytes, "l0%s:0.0.0.0:%s", adrMiDest, portTCParray);
+    //printf("Missatge a enviar: %s amb %d bytes",missLocResp,n);
+    int k = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
+    
+    return k;
+}
+
+int LUMI_ferDesregistre(const char* adrLumiLoc, const char* ipRem, int portUDP, int sckUDP) {
+    char miss[500];
+    //Primer construim el nostre missatge que tindra un format Dduned@PC-b
+    int midaAdr = strlen(adrLumiLoc);
+    snprintf(miss,midaAdr + 3,"D%s",adrLumiLoc);
+    
+    int k = LUMI_enviaMissatge(sckUDP, ipRem, portUDP, miss, midaAdr + 2);
+    
+    return k;
+}

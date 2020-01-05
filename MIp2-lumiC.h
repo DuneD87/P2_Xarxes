@@ -35,7 +35,7 @@ int LUMI_ferRegistre(int sck,char *ipRem, int portUDP,const char * adrMiLoc);
  *      servidor ha eliminat la seva adreca i l'ha posat com a no disponible
  * @return 0 si tot ha anat be, 1 si no ha trobat l'usuari
  */
-int LUMI_ferDesregistre(const char * adrMiLoc);
+int LUMI_ferDesregistre(const char * adrLumiLoc, const char * ipRem, int portUDP, int sckUDP);
 
 
 /*
@@ -90,3 +90,33 @@ int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP,int temps);
  * @post Donat un socket UDP, ens dona la IP i port UDP associats a aquest socket
  */
 int LUMI_trobarSckNom(int sckUDP, char * ipLoc, int * portLoc );
+
+
+/**
+ * @brief Inicia el procediment de registre
+ * @pre ---
+ * @post S'ha registrat correctament l'usuari
+ */
+int LUMI_registre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc, char * ipRem, int nBytesLoc);
+
+
+/**
+ * @brief Construeix el missatge de localitzacio
+ * @pre ---
+ * @post Donades dues adreces LUMI, construeix i envia, un missatge de localitzacio al servidor. Retorna el nombre de bytes si tot ha anat be, -1 si hi ha hagut error
+ */
+int LUMI_construirMissatgeLoc(int sckUdp, const char *ipRem, int portUdp, const char * miss, const char * adrLumiLoc, int nBytesLoc); 
+
+/**
+ * @brief Extreu IP i port del missatge
+ * @pre missatge en format valid
+ * @post S'han emplenat ipDesti i portTcp amb l'informacio continguda en el missatge
+ */
+void LUMI_extreureIpPort(const char * miss, char * ipDesti, int * portTcp); 
+
+/**
+ * @brief Missatge de resposta de localitzacio
+ * @pre miss en format valid
+ * @post S'ha construit i enviat el missatge de localitzacio amb la IP i port TCP del client, i l'adreca LUMI destinataria
+ */
+int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char * miss, const char * ipLoc, int portTcp, const char * ipRem, int portUdp);
