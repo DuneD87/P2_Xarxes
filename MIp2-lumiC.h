@@ -75,14 +75,14 @@ int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre);
  * @pre ---
  * @post Retorna el descriptor actiu del socket per el qual ens ha arribat un missatge
  */
-int LUMI_haArribatAlgunaCosa(int sck);
+int LUMI_haArribatAlgunaCosa(int sck, int sckTCP);
 
 /**
  * @brief Ens diu si ha arribat alguna cosa en temps (segons)
  * @pre Temps >= 0
  * @post Retorna el descriptor actiu del socket per el qual ens ha arribat un missatge
  */
-int LUMI_haArribatAlgunaCosaEnTemps(int sck,int temps);
+int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP,int temps);
 
 /**
  * @brief Obte IP i Port UDP

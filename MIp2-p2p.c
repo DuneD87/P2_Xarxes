@@ -40,17 +40,17 @@ void llegirNick(char * nicLoc) {
 
 }
 
-int connexio(int sesc, char * ipRem, char * ipLoc, char * nicLoc, char * nicRem, int * portTCPloc, int * portTCPrem) {
-    printf("%s", "Introdueix IP del servidor o espera contacte\n");
-    int descActiu = MI_HaArribatPetiConv(sesc);
+int connexio(int sesc, char * ipRem, char * ipLoc, const char * nicLoc, char * nicRem, int * portTCPloc, int * portTCPrem, int tipus) {
+    
+    //int descActiu = MI_HaArribatPetiConv(sesc);
     int scon;
-    if (descActiu == 0) {
+    if (tipus == 0) {
         /*Ens arriba input del teclat, fem de client                          */
         scon = MI_DemanaConv(ipRem, *portTCPrem, ipLoc, &*portTCPloc, nicLoc, nicRem);
 
         if (scon == -1) mostrarError();
 
-    } else if (descActiu == sesc) {
+    } else if (tipus == 1) {
         /*Ens arriba input per el socket de escolta, femd e servidor*/
         scon = MI_AcceptaConv(sesc, ipRem, &*portTCPrem, ipLoc, &*portTCPloc, nicLoc, nicRem);
         if (scon == -1) mostrarError();
@@ -66,11 +66,11 @@ void mostraInfoConversa(const char * ipLoc, const char * ipRem, int portTCPloc, 
     printf("Nick local:%s\nNick remot:%s\n", nicLoc, nicRem);
 }
 
-int conversa(int scon) {
+int conversa(int scon, int sckUdp) {
     char buffer[303];
     int bytesLlegits = 0;
-    int descActiu = MI_HaArribatLinia(scon);
     int bytesEnviats;
+    int descActiu = LUMI_haArribatAlgunaCosa(sckUdp,scon);
     if (descActiu == 0) {
 
         bytesLlegits = read(0, buffer, sizeof (buffer));
@@ -91,18 +91,16 @@ int conversa(int scon) {
     return bytesLlegits;
 }
 
-void construirMissatgeLocResp(int sckUdp, int sckTCP,const char * miss, const char * ipLoc, int portTcp, const char * ipRem, int portUdp) {
+void construirMissatgeLocResp(int sckUdp, int sckTCP, const char * miss, const char * ipLoc, int portTcp, const char * ipRem, int portUdp) {
     char adrMiDest[40];
     //Primer obtenim l'adreca LUMI del preguntador de L@Preguntada:@Preguntador
     int i = 1;
-    while (miss[i] != ':')
-    {
+    while (miss[i] != ':') {
         i++;
     }
     i++;
     int j = 0;
-    while (miss[i] != '\0')
-    {
+    while (miss[i] != '\0') {
         adrMiDest[j] = miss[i];
         i++;
         j++;
@@ -110,80 +108,142 @@ void construirMissatgeLocResp(int sckUdp, int sckTCP,const char * miss, const ch
     adrMiDest[j] = '\0';
     char missLocResp[500];
     char portTCParray[10];
-    int n = sprintf(portTCParray,"%d",portTcp);
+    int n = sprintf(portTCParray, "%d", portTcp);
     int nBytes = j + n + 12;
-    snprintf(missLocResp,nBytes,"l0%s:0.0.0.0:%s",adrMiDest,portTCParray);
+    snprintf(missLocResp, nBytes, "l0%s:0.0.0.0:%s", adrMiDest, portTCParray);
     //printf("Missatge a enviar: %s amb %d bytes",missLocResp,n);
     LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
 }
 
 void construirMissatgeLoc(int sckUdp, const char *ipRem, int portUdp, const char * miss, const char * adrLumiLoc, int nBytesLoc) {
     char adrLumiRem[40];
-    printf("Introdueix el nom@domini del client amb el que vols contactar\n");
+
     int nBytesRem = read(0, adrLumiRem, 40);
     char missLoc[500];
     adrLumiRem[nBytesRem - 1] = '\0';
     int nBytesMissLoc = nBytesLoc + nBytesRem + 2;
     snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
-    printf("Missatge al client: %s\nNombre de bytes: %d\n",missLoc,nBytesRem);
+    printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
     LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesMissLoc - 1);
 }
 
-void parlarAmbServidor(char * ipDesti, int * portTCP, int portTCPLoc, const char * ipLoc,int sckTCP) {
-    char adrLumiLoc[40], ipRem[16], petRegistre[500], missResposta[500];
+int ferRegistre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc, char * ipRem, int nBytesLoc) {
+    char petRegistre[500];
+    LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
+    LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
+    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+    int descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+    int resultat = 0;
+    int nIntents = 0;
+    while (resultat == 0) {
+        if (descActiu == sckUdp) {
+            int nBytes = LUMI_repMissatge(sckUdp, ipRem, portUdp, miss, sizeof (miss));
+            if (miss[0] == 'C' && miss[1] == '0') {
+                printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
+                resultat = 1;
+            }
+        } else {
+            if (nIntents < 5) {
+                printf("Numero d'intents: %d. Reintentan...\n", nIntents);
+                nIntents++;
+                LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+                descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+            } else {
+                resultat = -1;
+            }
+        }
+
+    }
+    return resultat;
+}
+
+void extreureIpPort(const char * miss, char * ipDesti, int * portTcp) {
+    //ex l0duned@PC-b:100.10.10.103:45232
+    int i = 0;
+    while (miss[i] != ':') {
+        i++; //saltem fins trobar IP
+    }
+    i++; //saltem :
+    int j = 0;
+    while (miss[i] != ':') {
+        ipDesti[j] = miss[i];
+        i++;
+        j++;
+    }
+    ipDesti[j] = '\0';
+    i++; //saltem :
+    int k = 0;
+    while (miss[i] != '\0') {
+        k = ((miss[i]) - '0') + k * 10;
+        i++;
+    }
+    *(portTcp) = k;
+}
+
+void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * nicLoc) {
+    char adrLumiLoc[40], ipRem[16], missResposta[500], nicRem[303];
+    char ipDesti[16];
+    int portTCP;
     int portUdp = 2020;
+    int enConversa = 0;
+    int scon, bytesLlegits,aux;
     strcpy(ipRem, "0.0.0.0");
     int sckUdp = LUMI_IniciaSckEscolta(ipRem, portUdp);
     printf("Introdueix l'adreca LUMI\n");
     int nBytesLoc = read(0, adrLumiLoc, sizeof ((adrLumiLoc)));
     adrLumiLoc[nBytesLoc - 1] = '\0';
-    LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
-    LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
-    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+    int resultat = ferRegistre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc);
+    while (resultat != 1) {
+        printf("Introdueix l'adreca LUMI\n");
+        int nBytesLoc = read(0, adrLumiLoc, sizeof ((adrLumiLoc)));
+        adrLumiLoc[nBytesLoc - 1] = '\0';
+        resultat = ferRegistre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc);
+    }
     int respObtg = 0;
     int step = 0;
-    int descActiu = LUMI_haArribatAlgunaCosa(sckUdp);
+    printf("Introdueix el nom@domini del client amb el que vols contactar o espera a que algu es conecti\n");
+    int descActiu = LUMI_haArribatAlgunaCosa(sckUdp, sckTCP);
     while (respObtg == 0) {
-        if (descActiu == sckUdp) {
-            int nBytes = LUMI_repMissatge(sckUdp, ipRem, portUdp, missResposta, sizeof (petRegistre));
-            
-            if (step == 0) {
-                if (missResposta[0] == 'C') {
-                    if (missResposta[1] == '0') {
-                        //Hem completat el registre, demanem l'usuari amb el que vol parlar
-                        printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
-                        //Hem finalitzat el registre, ara falta o demanar peticio de conversa, o esperar missatge de localitzacio
-                        printf("Selecciona una opcio:\n[0]Localitzar un usuari\n[1]Esperar connexio\n");
-                        int opcio;
-                        scanf("%d", &opcio);
-                        while (opcio != 0 && opcio != 1) {
-                            printf("Opcio incorrecte!\n");
-                            printf("Selecciona una opcio:\n[0]Localitzar un usuari\n[1]Esperar connexio\n");
-                            scanf("%d", &opcio);
-                        }
-                        if (opcio == 0) step = 1;
-                        else if (opcio == 1) step = 2;
-                    }
-                }
-            }
-            if (step == 1) {
-                if (missResposta[0] != 'l') {//Encara no hem demanat al servidor
-                    construirMissatgeLoc(sckUdp,ipRem,portUdp,missResposta,adrLumiLoc,nBytesLoc);
-                } else {//Hem obtingut resposta del client..
-                    printf("Missatge obtingut: %s\n",missResposta);
-                }
-            } else if (step == 2) {
+        if (enConversa == 0) {
+            if (descActiu == sckUdp) {
+                //Ens arriba un missatge per UDP, com actuem ??
+                //Potser que sigui un missatge de localitzacio L, haurem de construir un missatge l
+                //Potser que sigui un missatge de resposta de localitzacio l, si es correcte, procedirem a fer la conexio tcp
+                int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdp, missResposta, sizeof (missResposta));
                 if (missResposta[0] == 'L') {
                     //Ens arriba una peticio de localitzacio, construim missatge de resposta
                     missResposta[nBytes] = '\0';
-                    printf("Hola soc la varsha i tinc una peticio de localitzacio, que faig ??\n");
-                    construirMissatgeLocResp(sckUdp,sckTCP,missResposta,ipLoc,portTCPLoc,ipRem,portUdp);
+                    construirMissatgeLocResp(sckUdp, sckTCP, missResposta, ipLoc, portTCPloc, ipRem, portUdp);
+                } else if (missResposta[0] == 'l') {
+                    //Extreim adreça i port del missatge i fem conexio TCP
+                    missResposta[nBytes] = '\0';
+                    extreureIpPort(missResposta, ipDesti, &portTCP);
+                    //Fem de servidor i li demanem conversa al client.. MIRAR IPLOC I IPREM, ESTEM ESCCRIBIN EN MEMORIA PROTEGIDA! JO DEL FUTUR
+                    scon = connexio(sckTCP, ipDesti, ipLoc, nicLoc, nicRem, &portTCPloc, &portTCP, 0);
+                    enConversa = 1;
                 }
+
+            } else if (descActiu == 0) {
+                construirMissatgeLoc(sckUdp, ipRem, portUdp, missResposta, adrLumiLoc, nBytesLoc);
+
+            } else if (descActiu == sckTCP) {
+                //fem de client, ens arriba peticio de connexio de un servidor
+                scon = connexio(sckTCP, ipDesti, ipLoc, nicLoc, nicRem, &portTCPloc, &portTCP, 1);
+                printf("Peticio de connexio rebuda ! \n");
+                enConversa = 1;
             }
-
-
-        }
-        descActiu = LUMI_haArribatAlgunaCosa(sckUdp);
+            
+        } else if (enConversa == 1) {
+            mostraInfoConversa(ipLoc, ipDesti, portTCPloc, portTCP, nicLoc, nicRem);
+            bytesLlegits = conversa(scon,sckUdp);
+            while (bytesLlegits > 0) {
+                bytesLlegits = conversa(scon,sckUdp);
+            }
+            aux = MI_AcabaConv(scon);
+            if (aux == -1) mostrarError();
+        } 
+        if (enConversa == 0)
+            descActiu = LUMI_haArribatAlgunaCosa(sckUdp, sckTCP);
     }
 }
 
@@ -195,6 +255,7 @@ int main(int argc, char *argv[]) {
     char nicLoc[303], nicRem[303], ipRem[16], ipLoc[16];
     char continuar = 'S';
     MI_seleccionaInterficie(ipLoc);
+    
     /* Expressions, estructures de control, crides a funcions, etc.          */
     /* LLegim el nom, i port d'escolta i esperem a que l'usuari decideixi    */
     llegirNick(nicLoc);
@@ -203,11 +264,11 @@ int main(int argc, char *argv[]) {
     aux = MI_getsockname(sesc, ipLoc, &portTCPloc);
     if (aux == -1) mostrarError();
     printf("Port d'escolta escollit pel SO: %d\n", portTCPloc);
-    parlarAmbServidor(ipRem, &portTCPrem, portTCPloc,ipLoc,sesc);
-    while (continuar == 'S') {
+    parlarAmbServidor(portTCPloc, ipLoc, sesc,nicLoc);
+    /*while (continuar == 'S') {
         int scon = connexio(sesc, ipRem, ipLoc, nicLoc, nicRem, &portTCPloc, &portTCPrem);
         if (scon != -1) {
-            /*Ens hem conectat, mostrem les adreces i ports del remot i el local  */
+           
 
             mostraInfoConversa(ipLoc, ipRem, portTCPloc, portTCPrem, nicLoc, nicRem);
             bytesLlegits = conversa(scon);
@@ -221,7 +282,7 @@ int main(int argc, char *argv[]) {
 
         printf("Desitja continuar ? S/N\n");
         scanf(" %c", &continuar);
-    }
+    }*/
     return 0;
 }
 

@@ -125,16 +125,20 @@ int LUMI_IniciaSckEscolta(const char *ipLoc, int portUDP) {
     return UDP_CreaSock(ipLoc, portUDP);
 }
 
-int LUMI_haArribatAlgunaCosa(int sckEsc) {
+int LUMI_haArribatAlgunaCosa(int sckEsc,int sckTCP) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
     FD_SET(sckEsc, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosa(&conjunt, sckEsc);
+    FD_SET(sckTCP, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+     int max = sckEsc;
+    if (sckTCP > max)
+        max = sckTCP;
+    int sel = T_HaArribatAlgunaCosa(&conjunt, max);
     int descActiu;
     if (sel != -1) {
         int i = 0;
-        for (i; i <= sckEsc; i++)
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }
@@ -144,16 +148,20 @@ int LUMI_haArribatAlgunaCosa(int sckEsc) {
     return descActiu;
 }
 
-int LUMI_haArribatAlgunaCosaEnTemps(int sck, int temps) {
+int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
     FD_SET(sck, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosaEnTemps(&conjunt, sck,temps);
+    FD_SET(sckTCP, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    int max = sck;
+    if (sckTCP > max)
+        max = sckTCP;
+    int sel = T_HaArribatAlgunaCosaEnTemps(&conjunt, max,temps);
     int descActiu;
     if (sel != -1) {
         int i = 0;
-        for (i; i <= sck; i++)
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }
