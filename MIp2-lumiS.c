@@ -85,7 +85,7 @@ int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
     int trobat = -1;
     int i = 0;
     char adMI[40];
-    if (client[0] == 'R') {
+    if (client[0] == 'R' || client[0] == 'D') {
         client[nBytes - 1] = '\0';
         strcpy(adMI, client + 1);
     } else
@@ -111,6 +111,8 @@ int LUMIS_Registre(taulaClients *taulaCli, int fitxLog, int index, char *ip, int
 
     return 1;
 }
+
+
 
 int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
     char miss[500];
@@ -198,6 +200,12 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
         strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
         int portDest = taulaCli->taulaCli[index].sck.portUDP;
         LUMIS_EnviaA(sck, ipDest, *(&portDest), respLoc, nBytes);
+    } else if (miss[0] == 'D') {
+        printf("Desregistre!\n");
+        int index = LUMIS_cercarClient(taulaCli, miss, bytes_llegits);
+        strcpy(taulaCli->taulaCli[index].sck.adIP,"0.0.0.0");
+        taulaCli->taulaCli[index].sck.portUDP = 0;
+        printf("Nom:%s\nIP:%s\nPORT:%d\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
     }
 }
 
