@@ -66,3 +66,38 @@ int LUMIS_cercarClient(taulaClients *taulaCli, char * client, int nBytes);
  * @brief Finalitza y tenca el socket d'escolta
  */
 int LUMIS_Finalitza(int sck);
+
+/**
+ * @brief Guarda el port o adreça que conté el missatge entre els ':' a "adr"
+ * @pre --
+ * @post Retorna la mida del porto adreça llegida
+ */
+int LUMIS_guardaAdr(char* adr, char*miss, int y, int x, char cmp);
+
+/**
+ * @brief Porta a terme el desregistre d'un client
+ * @pre --
+ * @post Retorna la mida missatge de confirmació enviat
+ */
+int LUMIS_procesDesregistre(int sck,taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile, char *ipRem, int portRem, char *resp);
+
+/**
+ * @brief Porta a terme el proces de rebuda de resposta de Localització
+ * @pre --
+ * @post Retorna la mida del missatge enviat.
+ */
+int LUMIS_procesRespLoc(int sck,taulaClients *taulaCli, char *miss, int logFile, const char * ipRem);
+
+/**
+ * @brief Porta a terme el proces de Localització d'un client
+ * @pre --
+ * @post Retorna la mida del missatge enviat
+ */
+int LUMIS_procesLocalitzacio(int sck,taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile);
+
+/**
+ * @brief Porta a terme el registre d'un client
+ * @pre --
+ * @post Retorna la mida missatge de confirmació enviat
+ */
+int LUMIS_procesRegistre(int sck,taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile, char *ipRem, int portRem, char* resp);

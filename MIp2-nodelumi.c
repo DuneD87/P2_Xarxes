@@ -13,7 +13,7 @@
 #include "MIp2-lumiS.h"
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 /* Definició de constants, p.e., #define XYZ       1500                   */
 #define PORTUDP 2020
 
