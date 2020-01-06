@@ -151,7 +151,7 @@ int LUMI_haArribatAlgunaCosa(int sckEsc,int sckTCP) {
 int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
-    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
+    //FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
     FD_SET(sck, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
     FD_SET(sckTCP, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
     int max = sck;
@@ -189,10 +189,16 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, c
             if (miss[0] == 'C' && miss[1] == '0') {
                 printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
                 resultat = 1;
+            } else if (miss[0] == 'C' && miss[1] == '1') {
+                printf("No existeix usuari (user / domain name)\n");
+                resultat = -1;
+            } else if (miss[0] == 'C' && miss[1] == '2') {
+                printf("Format incorrecte\n");
+                resultat = -1;
             }
         } else {
             if (nIntents < 5) {
-                printf("Numero d'intents: %d. Reintentan...\n", nIntents);
+                printf("Numero d'intents: %d. Reintentan...\n", nIntents + 1);
                 nIntents++;
                 LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
                 descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
@@ -205,18 +211,17 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, c
     return resultat;
 }
 
-int LUMI_construirMissatgeLoc(int sckUdp, const char* ipRem, int portUdp, const char* miss, const char* adrLumiLoc, int nBytesLoc) {
+int LUMI_construirMissatgeLoc(const char* miss, const char* adrLumiLoc, int nBytesLoc, char * missLoc) {
     char adrLumiRem[40];
 
     int nBytesRem = read(0, adrLumiRem, 40);
-    char missLoc[500];
+    
     adrLumiRem[nBytesRem - 1] = '\0';
     int nBytesMissLoc = nBytesLoc + nBytesRem + 2;
     snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
-    printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
-    int n = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesMissLoc - 1);
+    //printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
     
-    return n;
+    return nBytesMissLoc;
 }
 
 void LUMI_extreureIpPort(const char* miss, char* ipDesti, int* portTcp) {

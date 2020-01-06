@@ -16,7 +16,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>MIp2-agelumi.c</itemPath>
       <itemPath>MIp2-dnsC.c</itemPath>
       <itemPath>MIp2-lumiC.c</itemPath>
       <itemPath>MIp2-mi.c</itemPath>
@@ -45,8 +44,6 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="MIp2-agelumi.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="MIp2-dnsC.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="MIp2-dnsC.h" ex="false" tool="3" flavor2="0">
@@ -86,8 +83,6 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="MIp2-agelumi.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="MIp2-dnsC.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="MIp2-dnsC.h" ex="false" tool="3" flavor2="0">

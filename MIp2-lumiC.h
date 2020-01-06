@@ -105,7 +105,7 @@ int LUMI_registre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc,
  * @pre ---
  * @post Donades dues adreces LUMI, construeix i envia, un missatge de localitzacio al servidor. Retorna el nombre de bytes si tot ha anat be, -1 si hi ha hagut error
  */
-int LUMI_construirMissatgeLoc(int sckUdp, const char *ipRem, int portUdp, const char * miss, const char * adrLumiLoc, int nBytesLoc); 
+int LUMI_construirMissatgeLoc(const char * miss, const char * adrLumiLoc, int nBytesLoc, char * missLoc); 
 
 /**
  * @brief Extreu IP i port del missatge

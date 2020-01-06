@@ -35,7 +35,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/MIp2-agelumi.o \
 	${OBJECTDIR}/MIp2-dnsC.o \
 	${OBJECTDIR}/MIp2-lumiC.o \
 	${OBJECTDIR}/MIp2-mi.o \
@@ -66,11 +65,6 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/p2_xarxes_client: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/p2_xarxes_client ${OBJECTFILES} ${LDLIBSOPTIONS}
-
-${OBJECTDIR}/MIp2-agelumi.o: MIp2-agelumi.c
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MIp2-agelumi.o MIp2-agelumi.c
 
 ${OBJECTDIR}/MIp2-dnsC.o: MIp2-dnsC.c
 	${MKDIR} -p ${OBJECTDIR}
