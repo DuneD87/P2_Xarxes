@@ -97,7 +97,7 @@ int LUMI_trobarSckNom(int sckUDP, char * ipLoc, int * portLoc );
  * @pre ---
  * @post S'ha registrat correctament l'usuari
  */
-int LUMI_registre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc, char * ipRem, int nBytesLoc);
+int LUMI_registre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc, char * ipRem, int nBytesLoc, int portUdpLoc);
 
 
 /**
@@ -120,3 +120,5 @@ void LUMI_extreureIpPort(const char * miss, char * ipDesti, int * portTcp);
  * @post S'ha construit i enviat el missatge de localitzacio amb la IP i port TCP del client, i l'adreca LUMI destinataria
  */
 int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char * miss, const char * ipLoc, int portTcp, const char * ipRem, int portUdp);
+
+

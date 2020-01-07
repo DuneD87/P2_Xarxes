@@ -15,6 +15,7 @@
 #include "MIp2-t.h"
 #include "MIp2-dnsC.h"
 #include "MIp2-lumiC.h"
+#include "MIp2-mi.h"
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -175,7 +176,7 @@ int LUMI_trobarSckNom(int sckUDP, char* ipLoc, int * portLoc) {
     return UDP_TrobaAdrSockLoc(sckUDP,ipLoc,&portLoc);
 }
 
-int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, char* ipRem, int nBytesLoc) {
+int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, char* ipRem, int nBytesLoc, int portUdpLoc) {
     char petRegistre[500];
     LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
     LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
@@ -185,7 +186,7 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, c
     int nIntents = 0;
     while (resultat == 0) {
         if (descActiu == sckUdp) {
-            int nBytes = LUMI_repMissatge(sckUdp, ipRem, portUdp, miss, sizeof (miss));
+            int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdpLoc, miss, sizeof (miss));
             if (miss[0] == 'C' && miss[1] == '0') {
                 printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
                 resultat = 1;
@@ -265,9 +266,9 @@ int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char* miss, cons
     char missLocResp[500];
     char portTCParray[10];
     int n = sprintf(portTCParray, "%d", portTcp);
-    int nBytes = j + n + 12;
-    snprintf(missLocResp, nBytes, "l0%s:0.0.0.0:%s", adrMiDest, portTCParray);
-    //printf("Missatge a enviar: %s amb %d bytes",missLocResp,n);
+    int nBytes = strlen(adrMiDest) + strlen(portTCParray) + strlen(ipLoc) + 5;
+    snprintf(missLocResp, nBytes, "l0%s:%s:%s", adrMiDest, ipLoc, portTCParray);
+    //printf("Missatge a enviar: %s amb %d bytes\n",missLocResp,n);
     int k = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
     
     return k;

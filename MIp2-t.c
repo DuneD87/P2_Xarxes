@@ -438,14 +438,18 @@ int TCP_seleccionaInterficie(char * ipLoc) {
 
         ifa = ifa->ifa_next;
     }
+    freeifaddrs(ifa);
     int res;
     scanf("%d", &res);
+    getifaddrs(&ifa);
     i = 0;
     while (ifa) {
         s = getnameinfo(ifa->ifa_addr, sizeof (struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
-            if (i == res)
+            if (i == res) {
                 strcpy(ipLoc, host);
+                
+            }
             i++;
         }
 

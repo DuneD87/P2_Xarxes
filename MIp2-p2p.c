@@ -119,27 +119,30 @@ int conversa(int scon, int sckUdp, char * ipRem, int * portUdp) {
     return bytesLlegits;
 }
 
-void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * nicLoc) {
+void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * nicLoc, const char * ipInterface) {
     char adrLumiLoc[40], ipRem[16], missResposta[500], nicRem[303], missLoc[500];
     char ipDesti[16];
     int portTCP;
     int portUdp = 2020;
+    int portUdpLoc;
+    printf("Introdueix el port udp\n");
+    scanf("%d",&portUdpLoc);
     int enConversa = 0;
     int nIntents = 0;
     int nBytesCreats;
     int descTemps = 0;
     int scon, bytesLlegits, aux;
     strcpy(ipRem, "0.0.0.0");
-    int sckUdp = LUMI_IniciaSckEscolta(ipRem, portUdp);
+    int sckUdp = LUMI_IniciaSckEscolta(ipRem, portUdpLoc);
     printf("Introdueix l'adreca LUMI\n");
     int nBytesLoc = read(0, adrLumiLoc, sizeof ((adrLumiLoc)));
     adrLumiLoc[nBytesLoc - 1] = '\0';
-    int resultat = LUMI_registre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc);
+    int resultat = LUMI_registre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc, portUdpLoc);
     while (resultat != 1) {
         printf("Introdueix l'adreca LUMI\n");
         int nBytesLoc = read(0, adrLumiLoc, sizeof ((adrLumiLoc)));
         adrLumiLoc[nBytesLoc - 1] = '\0';
-        resultat = LUMI_registre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc);
+        resultat = LUMI_registre(sckUdp, portUdp, missResposta, adrLumiLoc, ipRem, nBytesLoc, portUdpLoc);
     }
     char respObtg = 'S';
     printf("Introdueix el nom@domini del client amb el que vols contactar o espera a que algu es conecti\n");
@@ -150,17 +153,18 @@ void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * ni
                 //Ens arriba un missatge per UDP, com actuem ??
                 //Potser que sigui un missatge de localitzacio L, haurem de construir un missatge l
                 //Potser que sigui un missatge de resposta de localitzacio l, si es correcte, procedirem a fer la conexio tcp
-                int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdp, missResposta, sizeof (missResposta));
+                int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdpLoc, missResposta, sizeof (missResposta));
                 if (missResposta[0] == 'L') {
                     //Ens arriba una peticio de localitzacio, construim missatge de resposta
                     missResposta[nBytes] = '\0';
-                    int k = LUMI_construirMissatgeLocResp(sckUdp, sckTCP, missResposta, ipLoc, portTCPloc, ipRem, portUdp);
+                    int k = LUMI_construirMissatgeLocResp(sckUdp, sckTCP, missResposta, ipInterface, portTCPloc, ipRem, portUdp);
                 } else if (missResposta[0] == 'l') {
                     descTemps = 0;
                     nIntents = 0;
                     //Extreim adreça i port del missatge i fem conexio TCP
                     if (missResposta[1] == '0') {
                         missResposta[nBytes] = '\0';
+                        printf("%s\n",missResposta);
                         LUMI_extreureIpPort(missResposta, ipDesti, &portTCP);
                         //Fem de servidor i li demanem conversa al client.. MIRAR IPLOC I IPREM, ESTEM ESCCRIBIN EN MEMORIA PROTEGIDA! JO DEL FUTUR
                         scon = connexio(sckTCP, ipDesti, ipLoc, nicLoc, nicRem, &portTCPloc, &portTCP, 0);
@@ -182,6 +186,7 @@ void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * ni
                 LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesCreats - 1);
                 descTemps = 1;
                 nIntents = 0;
+                
 
             } else if (descActiu == sckTCP) {
                 //fem de client, ens arriba peticio de connexio de un servidor
@@ -212,15 +217,18 @@ void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * ni
             descActiu = LUMI_haArribatAlgunaCosa(sckUdp, sckTCP);
         else if (enConversa == 0 && descTemps == 1) {
             //TIMEOUT
-            if (nIntents < 5) {
+            if (nIntents > 0 && nIntents < 5) {
                 printf("Numero d'intents: %d. Reintentan...\n", nIntents + 1);
-                nIntents++;
                 LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesCreats - 1);
-                descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
-            } else {
+                
+            } else if (nIntents > 0){
                 descTemps = 0;
                 printf("Introdueix el nom@domini del client amb el que vols contactar o espera a que algu es conecti\n");
             }
+        }
+        if (nIntents < 6) {
+            nIntents++;
+            descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 2);
         }
     }
     if (respObtg == 'N') {
@@ -233,9 +241,8 @@ int main(int argc, char *argv[]) {
     /* Declaració de variables, p.e., int n;                                 */
 
     int portTCPloc, aux; //Aux serveix pel control d'errors
-    char nicLoc[303], ipLoc[16];
-    MI_seleccionaInterficie(ipLoc);
-
+    char nicLoc[303], ipLoc[16], ipInterface[16];
+    MI_seleccionaInterficie(ipInterface);
     /* Expressions, estructures de control, crides a funcions, etc.          */
     /* LLegim el nom, i port d'escolta i esperem a que l'usuari decideixi    */
     llegirNick(nicLoc);
@@ -244,7 +251,7 @@ int main(int argc, char *argv[]) {
     aux = MI_getsockname(sesc, ipLoc, &portTCPloc);
     if (aux == -1) mostrarError();
     printf("Port d'escolta escollit pel SO: %d\n", portTCPloc);
-    parlarAmbServidor(portTCPloc, ipLoc, sesc, nicLoc);
+    parlarAmbServidor(portTCPloc, ipInterface, sesc, nicLoc, ipInterface);
     return 0;
 }
 
