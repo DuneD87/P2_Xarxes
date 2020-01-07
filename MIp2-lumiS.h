@@ -17,13 +17,23 @@ typedef struct sckAdd{
 typedef struct data{
     char adMi[40]; 
     sckAdd sck;
+    
 } data;
 
 typedef struct taulaClients{
 	data taulaCli[200];
 	int size;
+        char domini[40];
 } taulaClients;
 
+
+/**
+ * @brief Obte el host d'una adreça lumi
+ * @pre adrLumi ha de ser un vector de characters de c acabat en \0
+ * @post S'ha emplenat el vector de caracters host amb el host obtingut de l'adreça lumi
+ *      i s'ha retornat el nombre de bytes del host.
+ */
+int LUMIS_obtenirHost(const char * adrLumi, char * host);
 
 /**
  * @brief Ens diu si ha arribat alguna cosa
