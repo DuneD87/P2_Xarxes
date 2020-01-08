@@ -180,7 +180,7 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, c
     char petRegistre[500];
     LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
     LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
-    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc);
     int descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
     int resultat = 0;
     int nIntents = 0;
@@ -201,7 +201,7 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, c
             if (nIntents < 5) {
                 printf("Numero d'intents: %d. Reintentan...\n", nIntents + 1);
                 nIntents++;
-                LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc + 1);
+                LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc);
                 descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
             } else {
                 resultat = -1;
