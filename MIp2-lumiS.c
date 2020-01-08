@@ -51,7 +51,7 @@ int LUMIS_obtenirHost(const char* adrLumi, char* host) {
     int x = 0;
     int y = 0;
     while (adrLumi[x] != '@')
-        x++;//Saltem el nom
+        x++; //Saltem el nom
     x++; //saltem @
     while (adrLumi[x] != '\0') {
         host[y] = adrLumi[x];
@@ -100,10 +100,10 @@ int LUMIS_emplenaTaula(taulaClients *taulaCli) {
     fclose(fpt);
     char host[40];
     if (taulaCli->size > 0) {
-        int nBytes = LUMIS_obtenirHost(taulaCli->taulaCli[0].adMi,host);
+        int nBytes = LUMIS_obtenirHost(taulaCli->taulaCli[0].adMi, host);
     }
-    printf("El nostre host es: %s\n",host);
-    strcpy(taulaCli->domini,host);
+    printf("El nostre host es: %s\n", host);
+    strcpy(taulaCli->domini, host);
     return taulaCli->size;
 }
 
@@ -114,8 +114,6 @@ int LUMIS_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqByte
 int LUMIS_RepDe(int Sck, char *IPrem, int *portUDPrem, char *SeqBytes, int LongSeqBytes) {
     return UDP_RepDe(Sck, IPrem, portUDPrem, SeqBytes, LongSeqBytes);
 }
-
-
 
 int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
     int trobat = -1;
@@ -133,10 +131,13 @@ int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
         if (strncmp(adMI, taulaCli->taulaCli[i].adMi, bytesAdMi) == 0) {
 
             trobat = 1;
-        } else i++;
+        } else
+            i++;
     }
-    if (trobat == 1) return i;
-    else return -1;
+    if (trobat == 1)
+        return i;
+    else
+        return -1;
 }
 
 int LUMIS_Registre(taulaClients *taulaCli, int fitxLog, int index, char *ip, int port) {
@@ -157,7 +158,7 @@ int LUMIS_procesRegistre(int sck, taulaClients *taulaCli, char *miss, int bytes_
         strcpy(resp, "C0"); //Tot ha anat be, enviem missatge de confirmacio amb registre OK
         if (k == 1)
             printf("Nom:%s\nIP:%s\nPORT:%d\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
-        bytesEnviats = LUMIS_EnviaA(sck, ipRem, *(&portRem), resp, sizeof (resp));
+        bytesEnviats = LUMIS_EnviaA(sck, ipRem, *(&portRem), resp, strlen(resp));
         if (bytesEnviats == -1) {
             perror("Error sending message");
             exit(-1);
@@ -171,51 +172,55 @@ int LUMIS_procesRegistre(int sck, taulaClients *taulaCli, char *miss, int bytes_
 }
 
 int LUMIS_procesLocalitzacio(int sck, taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile) {
-
-    char adrMiDest[40]; //El preguntat
-    char adrMiOrig[40]; //El preguntador
-    int nBytesDest = LUMIS_guardaAdr(adrMiDest, miss, 0, 1, ':');
-    int nBytesOrig = LUMIS_guardaAdr(adrMiOrig, miss, 0, strlen(adrMiDest) + 2, '\0');
-    char hostPreguntat[40];
+    //MISSATGES S'envien amb informacio incorrecte, revisar !!!! 
+    char adrLumiDest[40]; //El preguntat
+    char adrLumiOrig[40]; //El preguntador
+    LUMIS_guardaAdr(adrLumiDest, miss, 0, 1, ':');
+    LUMIS_guardaAdr(adrLumiOrig, miss, 0, strlen(adrLumiDest) + 2, '\0');
     char ipDest[16];
-    int nBytesHostDest = LUMIS_obtenirHost(adrMiDest,hostPreguntat);
-    int index = LUMIS_cercarClient(taulaCli, adrMiDest, bytes_llegits);
-    int indexOrig = LUMIS_cercarClient(taulaCli, adrMiOrig, strlen(adrMiOrig));
-    int cmp = strncmp(hostPreguntat,taulaCli->domini,nBytesHostDest);
-    if (cmp == 0) {
-        if (index != -1) {//Client trobat a la taula. Li enviem missatge de localitzacio
-
-            int portDest = taulaCli->taulaCli[index].sck.portUDP;
-            if (portDest != 0) {
+    int index = LUMIS_cercarClient(taulaCli, adrLumiDest, bytes_llegits);
+    int indexOrig = LUMIS_cercarClient(taulaCli, adrLumiOrig, strlen(adrLumiOrig));
+    int portDest;
+    int nBytes;
+    //primer mirem si el host de l'adreça desti pertany al nostre domini
+    char hostDest[40];
+    int nBytesDest = LUMIS_obtenirHost(adrLumiDest, hostDest);
+    int cmpDest = strncmp(hostDest, taulaCli->domini, nBytesDest);
+    if (cmpDest == 0) { //Som del mateix domini, yay !!
+        if (index != -1) { //Client existeix ?
+            portDest = taulaCli->taulaCli[index].sck.portUDP;
+            if (portDest != 0) { //Client online !
                 strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
-                int portDest = taulaCli->taulaCli[index].sck.portUDP;
-                LUMIS_EnviaA(sck, ipDest, *(&portDest), miss, bytes_llegits - 1);
-            } else {
-                //Usuari offline... intentem enviar Lvarsha@PC-b:duned@PC-b
-                //Obtenim l'usuari preguntador, busquem la seva adreca i li enviem missatge de resposta l3duned@PC-b                  
-                strcpy(ipDest, taulaCli->taulaCli[indexOrig].sck.adIP);
-                int portOrig = taulaCli->taulaCli[indexOrig].sck.portUDP;
-                snprintf(miss, strlen(adrMiOrig) + 3, "l4%s", adrMiOrig);
-                printf("Envian missatge de resposta: %s\n", miss);
-                LUMIS_EnviaA(sck, ipDest, *(&portOrig), miss, strlen(adrMiOrig) + 3);
+            } else { //Client offline !
+                //Enviem resposta de l4 al origen
+                //Comprovem si l'origen es del nostre domini!
+                char hostOrig[40];
+                int nBytesOrig = LUMIS_obtenirHost(adrLumiOrig, hostOrig);
+                int cmpOrig = strncmp(hostOrig, taulaCli->domini, nBytesOrig);
+                if (cmpOrig == 0) { // Usuari es del nostre domini, reenviem !
+                    strcpy(ipDest, taulaCli->taulaCli[indexOrig].sck.adIP);
+                    portDest = taulaCli->taulaCli[indexOrig].sck.portUDP;
+                } else {
+                    //Usuari es d'un domini diferent, resolem !
+                    DNSc_ResolDNSaIP(hostOrig,ipDest);
+                    portDest = 2020;
+                }
+                snprintf(miss, strlen(adrLumiOrig) + 3, "l4%s", adrLumiOrig);
             }
+        } else { //Client no existeix!
+            //Enviem resposta de l1 al origen
+            strcpy(ipDest, taulaCli->taulaCli[indexOrig].sck.adIP);
+            portDest = taulaCli->taulaCli[indexOrig].sck.portUDP;
+            snprintf(miss, strlen(adrLumiOrig) + 3, "l1%s", adrLumiOrig);
         }
-    } else if (nBytesHostDest == 0) {
-        //No s'ha trobat host, format incorrecte
-        strcpy(ipDest, taulaCli->taulaCli[indexOrig].sck.adIP);
-        int portOrig = taulaCli->taulaCli[indexOrig].sck.portUDP;
-        snprintf(miss, strlen(adrMiOrig) + 3, "l2%s", adrMiOrig);
-        printf("Envian missatge de resposta: %s\n", miss);
-        LUMIS_EnviaA(sck, ipDest, *(&portOrig), miss, strlen(adrMiOrig) + 3);
-    } else {
-        //Cercar host... 
-        int x = DNSc_ResolDNSaIP(hostPreguntat,ipDest);
-        if (x == 0) {
-            LUMIS_EnviaA(sck,ipDest,2020,miss,strlen(miss) + 1);
-        }
+    } else { //Client es d'un domini diferent!
+        //Resolem i reenviem missatge al domini !
+        DNSc_ResolDNSaIP(hostDest,ipDest);
+        portDest = 2020;
     }
-    
-
+    nBytes = strlen(miss) + 2;
+    printf("Envian missatge de resposta: %s a %s:%d\n ", miss, ipDest, portDest);
+    LUMIS_EnviaA(sck, ipDest, portDest, miss, nBytes);
     return bytes_llegits - 1;
 }
 
@@ -229,27 +234,27 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
         int nBytesAdrMi = LUMIS_guardaAdr(adrMiDest, miss, 0, 2, ':');
         int index = LUMIS_cercarClient(taulaCli, adrMiDest, nBytesAdrMi);
         char host[40];
-        int nBytesHost = LUMIS_obtenirHost(adrMiDest,host);
-       
+        int nBytesHost = LUMIS_obtenirHost(adrMiDest, host);
+
         //Construim el missatge
 
         nBytes = strlen(miss) + 2;
-       
-        if (strncmp(host,taulaCli->domini,nBytesHost) == 0) {
-            strcpy(respLoc,miss);
+
+        if (strncmp(host, taulaCli->domini, nBytesHost) == 0) {
+            strcpy(respLoc, miss);
             strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
             portDest = taulaCli->taulaCli[index].sck.portUDP;
         } else {
-            strcpy(respLoc,miss);
-            DNSc_ResolDNSaIP(host,ipDest);
+            strcpy(respLoc, miss);
+            DNSc_ResolDNSaIP(host, ipDest);
             portDest = 2020;
         }
-        
 
-    } else if (miss[1] == '3') {
-        printf("Usuari existent pero ocupat!\n");
+
+    } else if (miss[1] == '3' || miss[1] == '4') {
+        printf("Usuari offline o ocupat\n");
         //primer obtenim l'usuari al que hem de enviar
-       
+
         char adrMiDest[40];
         int i = 2; // ens situem a la segona posicio
         int nBytesAdrMi = 0;
@@ -260,23 +265,26 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
         }
         adrMiDest[nBytesAdrMi] = '\0';
         char host[40];
-        int nBytesHost = LUMIS_obtenirHost(adrMiDest,host);
+        int nBytesHost = LUMIS_obtenirHost(adrMiDest, host);
         int index = LUMIS_cercarClient(taulaCli, adrMiDest, nBytesAdrMi);
 
-         if (strncmp(host,taulaCli->domini,nBytesHost) == 0) {
+        if (strncmp(host, taulaCli->domini, nBytesHost) == 0) {
             strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
             portDest = taulaCli->taulaCli[index].sck.portUDP;
         } else {
-            DNSc_ResolDNSaIP(host,ipDest);
+            DNSc_ResolDNSaIP(host, ipDest);
             portDest = 2020;
         }
-        char respLoc[500];
-
-        snprintf(respLoc, nBytesAdrMi + 2, "l3%s", adrMiDest);
+        
+        if (miss[1] == '3')
+            snprintf(respLoc, nBytesAdrMi + 2, "l3%s", adrMiDest);
+        else if (miss[1] == '4')
+            snprintf(respLoc, nBytesAdrMi + 2, "l4%s", adrMiDest);
 
 
     }
-    printf("Missatge enviat: %s\n",respLoc);
+    nBytes = strlen(respLoc) + 1;
+    printf("Missatge enviat: %s \t a : %s\n", respLoc, ipDest);
     LUMIS_EnviaA(sck, ipDest, portDest, respLoc, nBytes);
     return nBytes;
 }
