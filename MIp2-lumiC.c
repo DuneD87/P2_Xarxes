@@ -292,8 +292,8 @@ int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char* miss, cons
     char missLocResp[500];
     char portTCParray[10];
     int n = sprintf(portTCParray, "%d", portTcp);
-    int nBytes = strlen(adrMiDest) + strlen(portTCParray) + strlen(ipLoc) + 5;
-    snprintf(missLocResp, nBytes, "l0%s:%s:%s", adrMiDest, ipLoc, portTCParray);
+    int nBytes = strlen(adrMiDest) + strlen(portTCParray) + strlen(ipLoc) + 4;
+    sprintf(missLocResp,"l0%s:%s:%s", adrMiDest, ipLoc, portTCParray);
     //printf("Missatge a enviar: %s amb %d bytes\n",missLocResp,n);
     int k = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
 

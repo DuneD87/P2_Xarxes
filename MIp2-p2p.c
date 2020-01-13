@@ -128,8 +128,8 @@ void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * ni
     printf("Introdueix el port udp\n");
     scanf("%d",&portUdpLoc);
     FILE * fPtr;
-    fPtr = fopen("client.log", "w");
-    fprintf(fPtr,"Inician log\n");
+    fPtr = fopen("client.log", "w+");
+    fprintf(fPtr,"Inician log");
     int enConversa = 0;
     int nIntents = 0;
     int nBytesCreats;
@@ -188,7 +188,7 @@ void parlarAmbServidor(int portTCPloc, char * ipLoc, int sckTCP, const char * ni
 
                 nBytesCreats = LUMI_construirMissatgeLoc(missResposta, adrLumiLoc, nBytesLoc, missLoc);
                 if (nBytesCreats != -1) {
-                    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesCreats - 1);
+                    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLoc, nBytesCreats - 2);
                     descTemps = 1;
                     nIntents = 0;
                     fprintf(fPtr,"MISSATGE ENVIAT AL SERVER: %s\n",missLoc);
