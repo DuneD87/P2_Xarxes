@@ -73,6 +73,21 @@ int Log_Escriu(int FitxLog, const char *MissLog) {
 int Log_TancaFitx(int FitxLog) {
 }
 
+
+int LUMI_obtenirHost(const char* adrLumi, char* host) {
+    int x = 0;
+    int y = 0;
+    while (adrLumi[x] != '@')
+        x++; //Saltem el nom
+    x++; //saltem @
+    while (adrLumi[x] != '\0') {
+        host[y] = adrLumi[x];
+        x++;
+        y++;
+    }
+    host[y] = '\0';
+    return y;
+}
 /* Si ho creieu convenient, feu altres funcions INTERNES                  */
 
 int LUMI_ferRegistre(int sck, char *ipRem, int portUDP, const char* adrMiLoc) {
@@ -94,7 +109,9 @@ int LUMI_ferRegistre(int sck, char *ipRem, int portUDP, const char* adrMiLoc) {
         c = adrMiLoc[i];
     }
     host[j] = '\0';
-    DNSc_ResolDNSaIP(host, ipRem);
+    int n = DNSc_ResolDNSaIP(host, ipRem);
+
+    return n;
 }
 
 int LUMI_enviaMissatge(int Sck, const char* IPrem, int portUDPrem, const char* SeqBytes, int LongSeqBytes) {
@@ -102,10 +119,9 @@ int LUMI_enviaMissatge(int Sck, const char* IPrem, int portUDPrem, const char* S
     return n;
 }
 
-int LUMI_repMissatge(int Sck, char* IPrem, int* portUDPrem, char* seqBytes, int LongSeqBytes)
-{
-    return UDP_RepDe(Sck,IPrem,&(*portUDPrem),seqBytes,LongSeqBytes);
-    
+int LUMI_repMissatge(int Sck, char* IPrem, int* portUDPrem, char* seqBytes, int LongSeqBytes) {
+    return UDP_RepDe(Sck, IPrem, &(*portUDPrem), seqBytes, LongSeqBytes);
+
 }
 
 int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre) {
@@ -119,20 +135,20 @@ int LUMI_construeixProtocolLUMI(const char *adrMI, char * petRegistre) {
         i++;
         j++;
         c = adrMI[j];
-    } 
+    }
 }
 
 int LUMI_IniciaSckEscolta(const char *ipLoc, int portUDP) {
     return UDP_CreaSock(ipLoc, portUDP);
 }
 
-int LUMI_haArribatAlgunaCosa(int sckEsc,int sckTCP) {
+int LUMI_haArribatAlgunaCosa(int sckEsc, int sckTCP) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
     FD_SET(sckEsc, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
     FD_SET(sckTCP, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-     int max = sckEsc;
+    int max = sckEsc;
     if (sckTCP > max)
         max = sckTCP;
     int sel = T_HaArribatAlgunaCosa(&conjunt, max);
@@ -149,7 +165,7 @@ int LUMI_haArribatAlgunaCosa(int sckEsc,int sckTCP) {
     return descActiu;
 }
 
-int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
+int LUMI_haArribatAlgunaCosaEnTemps(int sck, int sckTCP, int temps) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     //FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
@@ -158,7 +174,7 @@ int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
     int max = sck;
     if (sckTCP > max)
         max = sckTCP;
-    int sel = T_HaArribatAlgunaCosaEnTemps(&conjunt, max,temps);
+    int sel = T_HaArribatAlgunaCosaEnTemps(&conjunt, max, temps);
     int descActiu;
     if (sel != -1) {
         int i = 0;
@@ -173,42 +189,44 @@ int LUMI_haArribatAlgunaCosaEnTemps(int sck,int sckTCP, int temps) {
 }
 
 int LUMI_trobarSckNom(int sckUDP, char* ipLoc, int * portLoc) {
-    return UDP_TrobaAdrSockLoc(sckUDP,ipLoc,&portLoc);
+    return UDP_TrobaAdrSockLoc(sckUDP, ipLoc, &portLoc);
 }
 
 int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc, char* ipRem, int nBytesLoc, int portUdpLoc) {
     char petRegistre[500];
-    LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
+    int resultat = LUMI_ferRegistre(sckUdp, ipRem, portUdp, adrLumiLoc);
     LUMI_construeixProtocolLUMI(adrLumiLoc, petRegistre);
     LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc);
-    int descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
-    int resultat = 0;
-    int nIntents = 0;
-    while (resultat == 0) {
-        if (descActiu == sckUdp) {
-            int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdpLoc, miss, sizeof (miss));
-            if (miss[0] == 'C' && miss[1] == '0') {
-                printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
-                resultat = 1;
-            } else if (miss[0] == 'C' && miss[1] == '1') {
-                printf("No existeix usuari (user / domain name)\n");
-                resultat = -1;
-            } else if (miss[0] == 'C' && miss[1] == '2') {
-                printf("Format incorrecte\n");
-                resultat = -1;
-            }
-        } else {
-            if (nIntents < 5) {
-                printf("Numero d'intents: %d. Reintentan...\n", nIntents + 1);
-                nIntents++;
-                LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc);
-                descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+    if (resultat == 0) {
+        int nIntents = 0;
+        int descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+        while (resultat == 0) {
+            if (descActiu == sckUdp) {
+                int nBytes = LUMI_repMissatge(sckUdp, ipRem, &portUdpLoc, miss, sizeof (miss));
+                if (miss[0] == 'C' && miss[1] == '0') {
+                    printf("Registre Completat de forme correcte per usuari %s.\n", adrLumiLoc);
+                    resultat = 1;
+                } else if (miss[0] == 'C' && miss[1] == '1') {
+                    printf("No existeix usuari (user / domain name)\n");
+                    resultat = -1;
+                } else if (miss[0] == 'C' && miss[1] == '2') {
+                    printf("Format incorrecte\n");
+                    resultat = -1;
+                }
             } else {
-                resultat = -1;
+                if (nIntents < 5) {
+                    printf("Numero d'intents: %d. Reintentan...\n", nIntents + 1);
+                    nIntents++;
+                    LUMI_enviaMissatge(sckUdp, ipRem, portUdp, petRegistre, nBytesLoc);
+                    descActiu = LUMI_haArribatAlgunaCosaEnTemps(sckUdp, -1, 5);
+                } else {
+                    resultat = -1;
+                }
             }
-        }
 
-    }
+        }
+    } else
+        printf("Domini incorrecte!\n");
     return resultat;
 }
 
@@ -218,15 +236,23 @@ int LUMI_construirMissatgeLoc(const char* miss, const char* adrLumiLoc, int nByt
     int nBytesRem = read(0, adrLumiRem, 40);
     
     adrLumiRem[nBytesRem - 1] = '\0';
-    int nBytesMissLoc = nBytesLoc + nBytesRem + 2;
-    snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
-    //printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
-    
+    char host[40];
+    char ipDest[16];
+    int nBytesMissLoc;
+    int nBytesHost = LUMI_obtenirHost(adrLumiRem,host);
+    if (DNSc_ResolDNSaIP(host,ipDest) == 0) {
+        nBytesMissLoc = nBytesLoc + nBytesRem + 2;
+        snprintf(missLoc, nBytesMissLoc, "L%s:%s", adrLumiRem, adrLumiLoc);
+        //printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
+    } else {
+        nBytesMissLoc = -1;
+    }
+
     return nBytesMissLoc;
 }
 
 void LUMI_extreureIpPort(const char* miss, char* ipDesti, int* portTcp) {
-     //ex l0duned@PC-b:100.10.10.103:45232
+    //ex l0duned@PC-b:100.10.10.103:45232
     int i = 0;
     while (miss[i] != ':') {
         i++; //saltem fins trobar IP
@@ -270,7 +296,7 @@ int LUMI_construirMissatgeLocResp(int sckUdp, int sckTCP, const char* miss, cons
     snprintf(missLocResp, nBytes, "l0%s:%s:%s", adrMiDest, ipLoc, portTCParray);
     //printf("Missatge a enviar: %s amb %d bytes\n",missLocResp,n);
     int k = LUMI_enviaMissatge(sckUdp, ipRem, portUdp, missLocResp, nBytes);
-    
+
     return k;
 }
 
@@ -278,9 +304,9 @@ int LUMI_ferDesregistre(const char* adrLumiLoc, const char* ipRem, int portUDP, 
     char miss[500];
     //Primer construim el nostre missatge que tindra un format Dduned@PC-b
     int midaAdr = strlen(adrLumiLoc);
-    snprintf(miss,midaAdr + 3,"D%s",adrLumiLoc);
-    
+    snprintf(miss, midaAdr + 3, "D%s", adrLumiLoc);
+
     int k = LUMI_enviaMissatge(sckUDP, ipRem, portUDP, miss, midaAdr + 2);
-    
+
     return k;
 }
