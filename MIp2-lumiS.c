@@ -213,7 +213,7 @@ int LUMIS_procesLocalitzacio(int sck, taulaClients *taulaCli, char *miss, int by
                     DNSc_ResolDNSaIP(hostOrig,ipDest);
                     portDest = 2020;
                 }
-                snprintf(miss, strlen(adrLumiOrig) + 3, "l4%s", adrLumiOrig);
+                sprintf(miss, "l4%s", adrLumiOrig);
             }
         } else { //Client no existeix!
             //Enviem resposta de l1 al origen
@@ -227,14 +227,14 @@ int LUMIS_procesLocalitzacio(int sck, taulaClients *taulaCli, char *miss, int by
                 portDest = 2020;
                 printf("Host origen: %s\n",hostOrig);
             }
-            snprintf(miss, strlen(adrLumiOrig) + 3, "l1%s", adrLumiOrig);
+            sprintf(miss, "l1%s", adrLumiOrig);
         }
     } else { //Client es d'un domini diferent!
         //Resolem i reenviem missatge al domini !
         DNSc_ResolDNSaIP(hostDest,ipDest);
         portDest = 2020;
     }
-    nBytes = strlen(miss) + 2;
+    nBytes = strlen(miss);
     printf("Envian missatge de resposta: %s a %s:%d\n ", miss, ipDest, portDest);
     LUMIS_EnviaA(sck, ipDest, portDest, miss, nBytes);
     return bytes_llegits - 1;
@@ -257,15 +257,15 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
         nBytes = strlen(miss) + 2;
 
         if (strncmp(host, taulaCli->domini, nBytesHost) == 0) {
-            strcpy(respLoc, miss);
+            sprintf(respLoc,"%s",miss);
             strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
             portDest = taulaCli->taulaCli[index].sck.portUDP;
         } else {
-            strcpy(respLoc, miss);
+            sprintf(respLoc,"%s",miss);
             DNSc_ResolDNSaIP(host, ipDest);
             portDest = 2020;
         }
-
+        
 
     } else if (miss[1] == '3' || miss[1] == '4' || miss[1] == '1') {
         printf("Usuari offline o ocupat\n");
@@ -293,13 +293,13 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
         }
         
         if (miss[1] == '3')
-            snprintf(respLoc, nBytesAdrMi + 2, "l3%s", adrMiDest);
+            sprintf(respLoc, "l3%s", adrMiDest);
         else if (miss[1] == '4')
-            snprintf(respLoc, nBytesAdrMi + 2, "l4%s", adrMiDest);
+            sprintf(respLoc, "l4%s", adrMiDest);
         else if (miss[1] == '1')
-            snprintf(respLoc, nBytesAdrMi + 2, "l1%s", adrMiDest);
+            sprintf(respLoc, "l1%s", adrMiDest);
     }
-    nBytes = strlen(respLoc) + 2;
+    nBytes = strlen(respLoc);
     printf("Missatge enviat: %s \t a : %s\n", respLoc, ipDest);
     LUMIS_EnviaA(sck, ipDest, portDest, respLoc, nBytes);
     return nBytes;
