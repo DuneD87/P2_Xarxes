@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 /* Definició de constants, p.e., #define XYZ       1500 */
 
@@ -37,6 +40,53 @@ const char fitxNodeLumi[50] = "nodelumi.cfg";
 /* fer-les conegudes des d'aquí fins al final d'aquest fitxer, p.e.,      */
 /* int FuncioInterna(arg1, arg2...);                                      */
 /* Com a mínim heu de fer les següents funcions INTERNES:                 */
+
+int Log_CreaFitx(const char *NomFitxLog);
+int Log_Escriu(int FitxLog, const char *MissLog);
+int Log_TancaFitx(int FitxLog);
+
+/* Definició de funcions EXTERNES, és a dir, d'aquelles que es cridaran   */
+/* des d'altres fitxers, p.e., int LUMIc_FuncioExterna(arg1, arg2...) { } */
+/* En termes de capes de l'aplicació, aquest conjunt de funcions externes */
+/* formen la interfície de la capa LUMI, la part del client               */
+
+
+/* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
+/* servir només en aquest mateix fitxer. Les seves declaracions es troben */
+/* a l'inici d'aquest fitxer.                                             */
+
+/* Crea un fitxer de "log" de nom "NomFitxLog".                           */
+/* "NomFitxLog" és un "string" de C (vector de chars imprimibles acabat   */
+/* en '\0') d'una longitud qualsevol.                                     */
+/* Retorna -1 si hi ha error; l'identificador del fitxer creat si tot va  */
+
+/* bé.                                                                    */
+int Log_CreaFitx(const char *NomFitxLog) {
+
+    return open(NomFitxLog, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+}
+
+/* Escriu al fitxer de "log" d'identificador "FitxLog" el missatge de     */
+/* "log" "MissLog".                                                       */
+/* "MissLog" és un "string" de C (vector de chars imprimibles acabat      */
+/* en '\0') d'una longitud qualsevol.                                     */
+/* Retorna -1 si hi ha error; el nombre de caràcters del missatge de      */
+
+/* "log" (sense el '\0') si tot va bé                                     */
+int Log_Escriu(int FitxLog, const char *MissLog) {
+
+    return write(FitxLog, MissLog, strlen(MissLog));
+}
+
+/* Tanca el fitxer de "log" d'identificador "FitxLog".                    */
+
+/* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé.    */
+int Log_TancaFitx(int FitxLog) {
+
+    int c = close(FitxLog);
+    if (c == 0) c++;
+    return c;
+}
 
 
 /******************************************************************FUNCIONS EXTERNES************************************************************/
@@ -85,7 +135,7 @@ int LUMIS_IniciaSockEsc(const char* iploc, int portUDP) {
     return sck;
 }
 
-int LUMIS_emplenaTaula(taulaClients *taulaCli) {
+int LUMIS_emplenaTaula(taulaClients *taulaCli, char *host) {
     taulaCli->size = 0;
     FILE *fpt;
     fpt = fopen(fitxNodeLumi, "r");
@@ -98,7 +148,6 @@ int LUMIS_emplenaTaula(taulaClients *taulaCli) {
         taulaCli->size++;
     }
     fclose(fpt);
-    char host[40];
     if (taulaCli->size > 0) {
         int nBytes = LUMIS_obtenirHost(taulaCli->taulaCli[0].adMi, host);
     }
@@ -122,7 +171,7 @@ int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
     if (client[0] == 'R' || client[0] == 'D') {
         client[nBytes - 1] = '\0';
         strcpy(adMI, client + 1);
-        printf("admi:%s\n",adMI);
+        printf("admi:%s\n", adMI);
     } else
         strcpy(adMI, client);
 
@@ -144,7 +193,7 @@ int LUMIS_cercarClient(taulaClients* taulaCli, char * client, int nBytes) {
         return -1;
 }
 
-int LUMIS_Registre(taulaClients *taulaCli, int fitxLog, int index, char *ip, int port) {
+int LUMIS_Registre(taulaClients *taulaCli, int index, char *ip, int port) {
 
 
     strcpy(taulaCli->taulaCli[index].sck.adIP, ip);
@@ -157,10 +206,13 @@ int LUMIS_procesRegistre(int sck, taulaClients *taulaCli, char *miss, int bytes_
 
     int index = LUMIS_cercarClient(taulaCli, miss, bytes_llegits);
     int bytesEnviats = -1;
+    char miss2[500];
     printf("Procedint a fer registre\n");
     if (index != -1) {//Client trobat a la taula, procedim a fer registre
-        int k = LUMIS_Registre(taulaCli, logFile, index, ipRem, portRem);
+        int k = LUMIS_Registre(taulaCli, index, ipRem, portRem);
         strcpy(resp, "C0"); //Tot ha anat be, enviem missatge de confirmacio amb registre OK
+        sprintf(miss2, "Registre completat de '%s' amb @IP: %s i #port: %d\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
+        Log_Escriu(logFile, miss2);
         if (k == 1)
             printf("Nom:%s\nIP:%s\nPORT:%d\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
     } else {
@@ -168,13 +220,19 @@ int LUMIS_procesRegistre(int sck, taulaClients *taulaCli, char *miss, int bytes_
         //Tot lo de dalt es feina del metode cercar
         char host[40];
         int nBytes = LUMIS_obtenirHost(miss + 1, host);
-        if (strncmp(host,taulaCli->domini,nBytes) == 0) {
+        sprintf(miss2, "Error amb registre de '%s' amb @IP: %s i #port: %d: USUARI NO TROBAT\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
+        Log_Escriu(logFile, miss2);
+        if (strncmp(host, taulaCli->domini, nBytes) == 0) {
             //Enviem missatge de que usuari no trobat
-            snprintf(resp,3,"C1");
-        } else 
-            snprintf(resp,3,"C2");;//Domini incorrecte / format incorrecte
+            snprintf(resp, 3, "C1");
+        } else {
+            snprintf(resp, 3, "C2");
+            ; //Domini incorrecte / format incorrecte
+            sprintf(miss2, "Error amb registre de '%s' amb @IP: %s i #port: %d: FORMAT INCORRECTE\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
+            Log_Escriu(logFile, miss2);
+        }
     }
-    printf("Envian missatge de resposta: %s\n",resp);
+    printf("Envian missatge de resposta: %s\n", resp);
     bytesEnviats = LUMIS_EnviaA(sck, ipRem, *(&portRem), resp, strlen(resp));
     return bytesEnviats;
 }
@@ -210,7 +268,7 @@ int LUMIS_procesLocalitzacio(int sck, taulaClients *taulaCli, char *miss, int by
                     portDest = taulaCli->taulaCli[indexOrig].sck.portUDP;
                 } else {
                     //Usuari es d'un domini diferent, resolem !
-                    DNSc_ResolDNSaIP(hostOrig,ipDest);
+                    DNSc_ResolDNSaIP(hostOrig, ipDest);
                     portDest = 2020;
                 }
                 sprintf(miss, "l4%s", adrLumiOrig);
@@ -223,19 +281,22 @@ int LUMIS_procesLocalitzacio(int sck, taulaClients *taulaCli, char *miss, int by
             } else {
                 char hostOrig[40];
                 int nBytesOrig = LUMIS_obtenirHost(adrLumiOrig, hostOrig);
-                DNSc_ResolDNSaIP(hostOrig,ipDest);
+                DNSc_ResolDNSaIP(hostOrig, ipDest);
                 portDest = 2020;
-                printf("Host origen: %s\n",hostOrig);
+                printf("Host origen: %s\n", hostOrig);
             }
             sprintf(miss, "l1%s", adrLumiOrig);
         }
     } else { //Client es d'un domini diferent!
         //Resolem i reenviem missatge al domini !
-        DNSc_ResolDNSaIP(hostDest,ipDest);
+        DNSc_ResolDNSaIP(hostDest, ipDest);
         portDest = 2020;
     }
     nBytes = strlen(miss);
     printf("Envian missatge de resposta: %s a %s:%d\n ", miss, ipDest, portDest);
+    char miss2[500];
+    sprintf(miss2, "Enviem resposta '%s' a @IP: %s i #port: %d\n", miss, ipDest, portDest);
+    Log_Escriu(logFile, miss2);
     LUMIS_EnviaA(sck, ipDest, portDest, miss, nBytes);
     return bytes_llegits - 1;
 }
@@ -257,15 +318,15 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
         nBytes = strlen(miss) + 2;
 
         if (strncmp(host, taulaCli->domini, nBytesHost) == 0) {
-            sprintf(respLoc,"%s",miss);
+            sprintf(respLoc, "%s", miss);
             strcpy(ipDest, taulaCli->taulaCli[index].sck.adIP);
             portDest = taulaCli->taulaCli[index].sck.portUDP;
         } else {
-            sprintf(respLoc,"%s",miss);
+            sprintf(respLoc, "%s", miss);
             DNSc_ResolDNSaIP(host, ipDest);
             portDest = 2020;
         }
-        
+
 
     } else if (miss[1] == '3' || miss[1] == '4' || miss[1] == '1') {
         printf("Usuari offline o ocupat\n");
@@ -291,7 +352,7 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
             DNSc_ResolDNSaIP(host, ipDest);
             portDest = 2020;
         }
-        
+
         if (miss[1] == '3')
             sprintf(respLoc, "l3%s", adrMiDest);
         else if (miss[1] == '4')
@@ -301,6 +362,9 @@ int LUMIS_procesRespLoc(int sck, taulaClients *taulaCli, char *miss, int logFile
     }
     nBytes = strlen(respLoc);
     printf("Missatge enviat: %s \t a : %s\n", respLoc, ipDest);
+    char miss2[500];
+    sprintf(miss2, "Enviem missatge de Resposta de Loc '%s' a @IP: %s i #port: %d\n", respLoc, ipDest, portDest);
+    Log_Escriu(logFile, miss2);
     LUMIS_EnviaA(sck, ipDest, portDest, respLoc, nBytes);
     return nBytes;
 }
@@ -313,6 +377,9 @@ int LUMIS_procesDesregistre(int sck, taulaClients *taulaCli, char *miss, int byt
     strcpy(taulaCli->taulaCli[index].sck.adIP, "0.0.0.0");
     taulaCli->taulaCli[index].sck.portUDP = 0;
     strcmp(resp, "C0");
+    char miss2[500];
+    sprintf(miss2, "Desregistre d'usuari '%s'\n", taulaCli->taulaCli[index].adMi);
+    Log_Escriu(logFile, miss2);
     printf("Nom:%s\nIP:%s\nPORT:%d\n", taulaCli->taulaCli[index].adMi, taulaCli->taulaCli[index].sck.adIP, taulaCli->taulaCli[index].sck.portUDP);
 
 
@@ -323,6 +390,7 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
     char miss[500];
     char resp[500];
     char ipRem[16];
+    char miss2[500];
     int portRem;
     int bytes_llegits = LUMIS_RepDe(sck, ipRem, &portRem, miss, sizeof (miss));
     if (bytes_llegits == -1) {
@@ -332,40 +400,48 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
     miss[bytes_llegits] = '\0';
     printf("MISSATGE REBUT: %s\n", miss);
     if (miss[0] == 'R') { //Client demana registre
+        sprintf(miss2, "Missatge de REGISTRE rebut de @IP: %s i #port: %d\n", ipRem, portRem);
+        Log_Escriu(logFile, miss2);
         LUMIS_procesRegistre(sck, taulaCli, miss, bytes_llegits, logFile, ipRem, portRem, resp);
 
-
     } else if (miss[0] == 'L') { //Client demana localitzar un usuari
+        sprintf(miss2, "Missatge de LOCALITZACIO rebut de @IP: %s i #port: %d\n", ipRem, portRem);
+        Log_Escriu(logFile, miss2);
         LUMIS_procesLocalitzacio(sck, taulaCli, miss, bytes_llegits, logFile);
+
     } else if (miss[0] == 'l') { //Servidor rep resposta de localitzacio
+        sprintf(miss2, "Missatge de RespLOC rebut de @IP: %s i #port: %d\n", ipRem, portRem);
+        Log_Escriu(logFile, miss2);
         LUMIS_procesRespLoc(sck, taulaCli, miss, logFile, ipRem); //Servidor rep resposta de localitzacio
 
     } else if (miss[0] == 'D') {
+        sprintf(miss2, "Missatge de DESREGISTRE rebut de @IP: %s i #port: %d\n", ipRem, portRem);
+        Log_Escriu(logFile, miss2);
         LUMIS_procesDesregistre(sck, taulaCli, miss, bytes_llegits, logFile, ipRem, portRem, resp);
     }
+}
+
+int LUMIS_mostraClients(const taulaClients *taulaCli) {
+
+    int i;
+    for (i = 0; i < taulaCli->size; i++) {
+        if (strcmp(taulaCli->taulaCli[i].sck.adIP, "0.0.0.0") != 0)
+            printf("%s - ONLINE\n", taulaCli->taulaCli[i].adMi);
+        else
+            printf("%s - OFFLINE\n", taulaCli->taulaCli[i].adMi);
+    }
+
+    return i;
 }
 
 /* MÉS FUNCIONS INTERNES */
 
 
-
-
 int LUMIS_HaArribatAlgunaCosa(int sckEsc) {
-    fd_set conjunt;
-    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
-    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(sckEsc, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosa(&conjunt, sckEsc);
-    int descActiu;
-    if (sel != -1) {
-        int i = 0;
-        for (i; i <= sckEsc; i++)
-            if (FD_ISSET(i, &conjunt)) {
-                descActiu = i;
-            }
-    } else {
-        descActiu = -1;
-    }
+    int conjunt[1];
+    conjunt[0] = sckEsc;
+    int descActiu = T_HaArribatAlgunaCosa(conjunt, sckEsc);
+
     return descActiu;
 }
 

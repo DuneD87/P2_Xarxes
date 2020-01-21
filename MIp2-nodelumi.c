@@ -27,16 +27,24 @@ int main(int argc, char *argv[]) {
     /* Declaració de variables, p.e., int n;                                 */
     char ipLoc[16];
     struct taulaClients taulaCli;
-    char fitxLog[40] = "MIp2-loglumi.log";
+    char fitxLog[40] = "MIp2-loglumi-";
     int LogFile, descActiu, sckLoc;
-    strcpy(ipLoc,"0.0.0.0");
+    strcpy(ipLoc, "0.0.0.0");
+    char host[40];
     /* Expressions, estructures de control, crides a funcions, etc.          */
 
+
     //Comencem inicialitzant el servidor: llegeix la taula de client, crea socket UDP i obre el fitxer
-    if (LUMIS_emplenaTaula(&taulaCli) == -1) {
+    if (LUMIS_emplenaTaula(&taulaCli, host) == -1) {
         printf("Error al emplenar taula\n");
         exit(-1);
     }
+
+    /* INICIALITZEM EL LOG FILE */
+    host[4] = '\0';
+    strcat(fitxLog, host);
+    strcat(fitxLog, ".log");
+    LogFile = Log_CreaFitx(fitxLog);
 
     if ((sckLoc = LUMIS_IniciaSockEsc(ipLoc, 2020)) == -1) //perror?
     {
@@ -48,15 +56,17 @@ int main(int argc, char *argv[]) {
         printf("Error en iniciar el fitxer log\n");
         exit(-1);
     }*/
-    printf("ESCOLTEM\n");
+    printf("Escoltant...\n");
     descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
-    printf("I RUMIEM!\n");
     while (descActiu > 0) {
+        LUMIS_mostraClients(&taulaCli);
         LUMIS_ServeixPeticions(sckLoc, &taulaCli, LogFile);
         descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
     }
-    printf("FI SESSIO\n");
+    printf("Finalitzan sessio..\n");
+    Log_Escriu(LogFile, "FINALITZA LA SESSIÓ\n");
     LUMIS_Finalitza(sckLoc);
+    Log_TancaFitx(LogFile);
     return 0;
 
 }

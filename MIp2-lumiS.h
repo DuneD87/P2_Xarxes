@@ -23,7 +23,7 @@ typedef struct data{
 typedef struct taulaClients{
 	data taulaCli[200];
 	int size;
-        char domini[40];
+	char domini[40];
 } taulaClients;
 
 
@@ -48,7 +48,7 @@ int LUMIS_HaArribatAlgunaCosa(int sck);
  * @pre Fitxer nodelumi.cfg ha d'exisistir a la carpeta dels servidor
  * @post S'ha emplenat la taula amb els diferents clients trobats al fitxer
  */
-int LUMIS_emplenaTaula(taulaClients *taulaCli);
+int LUMIS_emplenaTaula(taulaClients *taulaCli, char *host);
 
 /**
  * @brief Inicia socket de escolta
@@ -111,3 +111,5 @@ int LUMIS_procesLocalitzacio(int sck,taulaClients *taulaCli, char *miss, int byt
  * @post Retorna la mida missatge de confirmació enviat
  */
 int LUMIS_procesRegistre(int sck,taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile, char *ipRem, int portRem, char* resp);
+
+int LUMIS_mostraClients(const taulaClients *taulaCli);
