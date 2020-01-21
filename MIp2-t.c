@@ -227,7 +227,6 @@ int TCP_TrobaAdrSockRem(int Sck, char *IPrem, int *portTCPrem) {
     int long_adrr2 = sizeof (adrrem);
     int err = 1;
     if (getpeername(Sck, (struct sockaddr *) &adrrem, &long_adrr2) == -1) {
-        perror("Error en getpeername");
         err = -1;
     }
     strcpy(IPrem, inet_ntoa(adrrem.sin_addr));
@@ -304,7 +303,7 @@ int UDP_RepDe(int Sck, char *IPrem, int *portUDPrem, char *SeqBytes, int LongSeq
     int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrrem,&laddRem);
     //UDP_TrobaAdrSockRem(Sck,IPrem,&(*portUDPrem));
     strcpy(IPrem, inet_ntoa(addrrem.sin_addr));
-    portUDPrem = htons(addrrem.sin_port);
+    *portUDPrem = htons(addrrem.sin_port);
     
     return nBytes;
 }
@@ -391,8 +390,24 @@ int UDP_TrobaAdrSockRem(int Sck, char *IPrem, int *portUDPrem) {
 
 /* sockets, retorna l’identificador d’aquest socket.                      */
 int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck) {
-    int sel = select(LongLlistaSck + 1, LlistaSck, NULL, NULL, NULL);
-    return sel;
+     fd_set conjunt;
+    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
+    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
+    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    FD_SET(LlistaSck[1], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, NULL);
+    int descActiu;
+    if (sel != -1) {
+        int i = 0;
+        for (i; i <= LongLlistaSck; i++)
+            if (FD_ISSET(i, &conjunt)) {
+                descActiu = i;
+            }
+    } else {
+        descActiu = -1;
+    }
+    
+    return descActiu;
 }
 
 /* Examina simultàniament i sense límit de temps (una espera indefinida)  */
@@ -407,8 +422,24 @@ int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck,int tem
     struct timeval tv;
     tv.tv_sec = temps;
     tv.tv_usec = 0;
-    int sel = select(LongLlistaSck + 1, LlistaSck, NULL, NULL,&tv);
-    return sel;
+    fd_set conjunt;
+    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
+    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
+    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    FD_SET(LlistaSck[1], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, &tv);
+    int descActiu;
+    if (sel != -1) {
+        int i = 0;
+        for (i; i <= LongLlistaSck; i++)
+            if (FD_ISSET(i, &conjunt)) {
+                descActiu = i;
+            }
+    } else {
+        descActiu = -1;
+    }
+    
+    return descActiu;
 }
 
 /* Obté un missatge de text que descriu l'error produït en la darrera     */

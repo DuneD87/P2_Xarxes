@@ -71,21 +71,9 @@ int MI_IniciaEscPetiRemConv(int portTCPloc) {
 
 /* arriba una petició remota.                                             */
 int MI_HaArribatPetiConv(int SckEscMI) {
-    fd_set conjunt;
-    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
-    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(SckEscMI, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosa(&conjunt, SckEscMI);
-    int descActiu;
-    if (sel != -1) {
-        int i = 0;
-        for (i; i <= SckEscMI; i++)
-            if (FD_ISSET(i, &conjunt)) {
-                descActiu = i;
-            }
-    } else {
-        descActiu = -1;
-    }
+    int conjunt[1];
+    conjunt[0] = SckEscMI;
+    int descActiu = T_HaArribatAlgunaCosa(conjunt, SckEscMI);
     return descActiu;
 }
 
@@ -166,20 +154,9 @@ int MI_AcceptaConv(int SckEscMI, char *IPrem, int *portTCPrem, char *IPloc, int 
 
 /* arriba una línia remota.                                               */
 int MI_HaArribatLinia(int SckConvMI) {
-    fd_set conjunt;
-    FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
-    FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(SckConvMI, &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = T_HaArribatAlgunaCosa(&conjunt, SckConvMI);
-    int descActiu;
-    if (sel != -1) {
-        int i = 0;
-        for (i; i <= SckConvMI; i++)
-            if (FD_ISSET(i, &conjunt))
-                descActiu = i;
-    } else {
-        descActiu = -1;
-    }
+    int conjunt[1];
+    conjunt[0] = SckConvMI;
+    int descActiu = T_HaArribatAlgunaCosa(conjunt, SckConvMI);
     return descActiu;
 }
 

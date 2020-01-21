@@ -34,4 +34,5 @@ int UDP_Envia(int Sck, const char *SeqBytes, int LongSeqBytes);
 int UDP_Rep(int Sck, char *SeqBytes, int LongSeqBytes);
 int UDP_TrobaAdrSockRem(int Sck, char *IPrem, int *portUDPrem);
 int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck);
+int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck,int temps);
 char* T_MostraError(void);
