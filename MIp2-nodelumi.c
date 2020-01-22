@@ -23,6 +23,33 @@
 
 /* int FuncioInterna(arg1, arg2...);                                      */
 
+int mostraClients(const taulaClients *taulaCli) {
+
+    int i;
+    for (i = 0; i < taulaCli->size; i++) {
+        if (strcmp(taulaCli->taulaCli[i].sck.adIP, "0.0.0.0") != 0)
+            printf("%s - ONLINE\n", taulaCli->taulaCli[i].adMi);
+        else
+            printf("%s - OFFLINE\n", taulaCli->taulaCli[i].adMi);
+    }
+
+    return i;
+}
+
+int mostraPeticio(int pet) {
+
+    if (pet == 1)
+        printf("REGISTRE COMPLETAT\n");
+    else if (pet == 2)
+        printf("LOCALITZANT USUARI...\n");
+    else if (pet == 3)
+        printf("RESPOSTA REBUDA!\n");
+    else if (pet == 4)
+        printf("DESREGISTRE COMPLETAT\n");
+
+    return 1;
+}
+
 int main(int argc, char *argv[]) {
     /* Declaració de variables, p.e., int n;                                 */
     char ipLoc[16];
@@ -39,6 +66,7 @@ int main(int argc, char *argv[]) {
         printf("Error al emplenar taula\n");
         exit(-1);
     }
+    printf("El nostre host és: %s\n", host);
 
     /* INICIALITZEM EL LOG FILE */
     host[4] = '\0';
@@ -59,11 +87,12 @@ int main(int argc, char *argv[]) {
     printf("Escoltant...\n");
     descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
     while (descActiu > 0) {
-        LUMIS_mostraClients(&taulaCli);
-        LUMIS_ServeixPeticions(sckLoc, &taulaCli, LogFile);
+        int pet = LUMIS_ServeixPeticions(sckLoc, &taulaCli, LogFile);
+        mostraPeticio(pet);
+        mostraClients(&taulaCli);
         descActiu = LUMIS_HaArribatAlgunaCosa(sckLoc);
     }
-    printf("Finalitzan sessio..\n");
+    printf("Finalitzant sessio..\n");
     Log_Escriu(LogFile, "FINALITZA LA SESSIÓ\n");
     LUMIS_Finalitza(sckLoc);
     Log_TancaFitx(LogFile);

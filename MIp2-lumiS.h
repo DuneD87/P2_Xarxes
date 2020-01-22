@@ -3,7 +3,7 @@
 /* P2 - MI amb sockets TCP/IP - Part II                                   */
 /* Fitxer capçalera de lumiC.c                                            */
 /*                                                                        */
-/* Autors: X, Y                                                           */
+/* Autors: Xavier Avivar                                                  */
 /*                                                                        */
 /**************************************************************************/
 
@@ -25,6 +25,27 @@ typedef struct taulaClients{
 	int size;
 	char domini[40];
 } taulaClients;
+
+/**
+ * @brief Crea el fitxer log
+ * @pre NomFitxLog ha de ser un vector de caracters acabat en \0
+ * @post Ens dona el descriptor del fitxer log
+ */
+int Log_CreaFitx(const char *NomFitxLog);
+
+/**
+ * @brief Escriu al fitxer log
+ * @pre FitxLog ha de ser un descriptor de fitxer valid i MissLog un vector de caracters acabat en \0
+ * @post Escriu MissLog al fitxer LOG, retorna 0 si tot ha anat be, qualsevol negatiu en cas contrari
+ */
+int Log_Escriu(int FitxLog, const char *MissLog);
+
+/**
+ * @brief Tanca el fitxer log
+ * @pre FitxLog ha de ser un descriptor de fitxer valid
+ * @post S'ha tancat el fitxer log i s'ha retornat 0 indicant que tot ha anat be, qualsevol negatiu en cas contrari
+ */
+int Log_TancaFitx(int FitxLog);
 
 
 /**
@@ -111,5 +132,3 @@ int LUMIS_procesLocalitzacio(int sck,taulaClients *taulaCli, char *miss, int byt
  * @post Retorna la mida missatge de confirmació enviat
  */
 int LUMIS_procesRegistre(int sck,taulaClients *taulaCli, char *miss, int bytes_llegits, int logFile, char *ipRem, int portRem, char* resp);
-
-int LUMIS_mostraClients(const taulaClients *taulaCli);
