@@ -26,52 +26,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-
-/* Definició de constants, p.e., #define XYZ       1500                   */
-
-/* Declaració de funcions INTERNES que es fan servir en aquest fitxer     */
-/* (les  definicions d'aquestes funcions es troben més avall) per així    */
-/* fer-les conegudes des d'aquí fins al final d'aquest fitxer, p.e.,      */
-/* int FuncioInterna(arg1, arg2...);                                      */
-/* Com a mínim heu de fer les següents funcions INTERNES:                 */
-
-
-/* Definició de funcions EXTERNES, és a dir, d'aquelles que es cridaran   */
-/* des d'altres fitxers, p.e., int LUMIc_FuncioExterna(arg1, arg2...) { } */
-/* En termes de capes de l'aplicació, aquest conjunt de funcions externes */
-/* formen la interfície de la capa LUMI, la part del client               */
-
-
-/* Definició de funcions INTERNES, és a dir, d'aquelles que es faran      */
-/* servir només en aquest mateix fitxer. Les seves declaracions es troben */
-/* a l'inici d'aquest fitxer.                                             */
-
-/* Crea un fitxer de "log" de nom "NomFitxLog".                           */
-/* "NomFitxLog" és un "string" de C (vector de chars imprimibles acabat   */
-/* en '\0') d'una longitud qualsevol.                                     */
-/* Retorna -1 si hi ha error; l'identificador del fitxer creat si tot va  */
-
-/* bé.                                                                    */
 int Log_CreaFitx(const char *NomFitxLog) {
 
     return open(NomFitxLog, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
 }
 
-/* Escriu al fitxer de "log" d'identificador "FitxLog" el missatge de     */
-/* "log" "MissLog".                                                       */
-/* "MissLog" és un "string" de C (vector de chars imprimibles acabat      */
-/* en '\0') d'una longitud qualsevol.                                     */
-/* Retorna -1 si hi ha error; el nombre de caràcters del missatge de      */
 
-/* "log" (sense el '\0') si tot va bé                                     */
 int Log_Escriu(int FitxLog, const char *MissLog) {
 
     return write(FitxLog, MissLog, strlen(MissLog));
 }
 
-/* Tanca el fitxer de "log" d'identificador "FitxLog".                    */
-
-/* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé.    */
 int Log_TancaFitx(int FitxLog) {
 
     int c = close(FitxLog);
@@ -359,24 +324,17 @@ int LUMI_registre(int sckUdp, int portUdp, char* miss, const char* adrLumiLoc,ch
     return resultat;
 }
 
-int LUMI_construirMissatgeLoc(const char* miss, const char* adrLumiLoc, int nBytesLoc, char * missLoc, int LogFile) {
-    char adrLumiRem[40];
-    scanf("%s",adrLumiRem);
-    int nBytesRem = strlen(adrLumiRem);
-
+int LUMI_construirMissatgeLoc(const char* miss, const char* adrLumiLoc, int nBytesLoc, char * missLoc, int LogFile, char * adrLumiRem, int nBytesRem) {
+   
+    if (nBytesRem < 2) return 0;
     char host[40];
     char ipDest[16];
     int nBytesMissLoc;
     LUMI_obtenirHost(adrLumiRem, host);
     if (DNSc_ResolDNSaIP(host, ipDest) == 0) {
         nBytesMissLoc = nBytesLoc + nBytesRem + 2;
-        char auxMi[40];
-        int i = 0;
-        while (adrLumiLoc[i] != '\0') {
-            auxMi[i] = adrLumiLoc[i];
-            i++;
-        }
-        sprintf(missLoc,"L%s:%s", adrLumiRem, auxMi);
+        
+        sprintf(missLoc,"L%s:%s", adrLumiRem, adrLumiLoc);
         //printf("Missatge al client: %s\nNombre de bytes: %d\n", missLoc, nBytesRem);
         char miss2[500];
         sprintf(miss2, "Construim missatge L: %s\n", missLoc);
@@ -423,17 +381,12 @@ int LUMI_ferDesregistre(const char* adrLumiLoc, const char* ipRem, int portUDP, 
     char miss[500];
     //Primer construim el nostre missatge que tindra un format Dduned@PC-b
     int midaAdr = strlen(adrLumiLoc);
-    char auxMi[40];
-    int i = 0;
-    while (adrLumiLoc[i] != '\0') {
-        auxMi[i] = adrLumiLoc[i];
-        i++;
-    }
-    sprintf(miss, "D%s", auxMi);
+   
+    sprintf(miss, "D%s", adrLumiLoc);
 
     int k = LUMI_enviaMissatge(sckUDP, ipRem, portUDP, miss, midaAdr + 1, LogFile);
     char miss2[500];
-    sprintf(miss2, "Enviat missatge de desregistre de '%s' a @IP: %s i #port: %d\n", adrLumiLoc, ipRem, portUDP);
+    sprintf(miss2, "Enviat missatge de desregistre '%s' a @IP: %s i #port: %d\n", miss, ipRem, portUDP);
     Log_Escriu(LogFile, miss2);
 
     return k;

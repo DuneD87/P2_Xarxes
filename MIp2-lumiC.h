@@ -6,21 +6,37 @@
 /* P2 - MI amb sockets TCP/IP - Part II                                   */
 /* Fitxer capçalera de lumiC.c                                            */
 /*                                                                        */
-/* Autors: X, Y                                                           */
+/* Autors: Xavier Avivar                                                          */
 /*                                                                        */
 /**************************************************************************/
-
-/* Declaració de funcions EXTERNES de lumiC.c, és a dir, d'aquelles       */
-/* funcions que es faran servir en un altre fitxer extern a lumiC.c,      */
-/* p.e., int LUMIc_FuncioExterna(arg1, arg2...) { }                       */
-/* El fitxer extern farà un #include del fitxer lumiC.h a l'inici, i      */
-/* així les funcions seran conegudes en ell.                              */
-/* En termes de capes de l'aplicació, aquest conjunt de funcions          */
-/* EXTERNES formen la interfície de la capa LUMI, la part del client      */
-
+/**
+ * @brief Crea el fitxer log
+ * @pre NomFitxLog ha de ser un vector de caracters acabat en \0
+ * @post Ens dona el descriptor del fitxer log
+ */
 int Log_CreaFitx(const char *NomFitxLog);
+
+/**
+ * @brief Escriu al fitxer log
+ * @pre FitxLog ha de ser un descriptor de fitxer valid i MissLog un vector de caracters acabat en \0
+ * @post Escriu MissLog al fitxer LOG, retorna 0 si tot ha anat be, qualsevol negatiu en cas contrari
+ */
 int Log_Escriu(int FitxLog, const char *MissLog);
+
+/**
+ * @brief Tanca el fitxer log
+ * @pre FitxLog ha de ser un descriptor de fitxer valid
+ * @post S'ha tancat el fitxer log i s'ha retornat 0 indicant que tot ha anat be, qualsevol negatiu en cas contrari
+ */
 int Log_TancaFitx(int FitxLog);
+
+/**
+ * @brief Obte el host
+ * @pre adrLumi ha de ser una adreça de LUMI valida amb format ej. 'duned@PC-a' i sera
+ *      un vector de caracters acabat en \0
+ * @post Copia el resultat a 'host' i retorna el nombre de bytes creats
+ * @return 
+ */
 int LUMI_obtenirHost(const char* adrLumi, char* host);
 
 /*
@@ -28,7 +44,7 @@ int LUMI_obtenirHost(const char* adrLumi, char* host);
  * @pre ---
  * @post S'ha registrat l'usuari al node corresponen. Aixo significa que el
  *      servidor ha guardat la seva adreca i l'ha posat com a disponible
- * @return 0 si tot ha anat be, 1 si no ha trobat l'usuari
+ * @return 0 si tot ha anat be, -1 si no ha trobat l'usuari
  */
 int LUMI_ferRegistre(int sck,char *ipRem, int portUDP,const char * adrMiLoc, int LogFile);
 
@@ -37,7 +53,7 @@ int LUMI_ferRegistre(int sck,char *ipRem, int portUDP,const char * adrMiLoc, int
  * @pre ---
  * @post S'ha desregistrar l'usuari al node corresponen. Aixo significa que el
  *      servidor ha eliminat la seva adreca i l'ha posat com a no disponible
- * @return 0 si tot ha anat be, 1 si no ha trobat l'usuari
+ * @return 0 si tot ha anat be, -1 si no ha trobat l'usuari
  */
 int LUMI_ferDesregistre(const char * adrLumiLoc, const char * ipRem, int portUDP, int sckUDP, int LogFile);
 
@@ -109,7 +125,7 @@ int LUMI_registre(int sckUdp, int portUdp, char * miss, const char * adrLumiLoc,
  * @pre ---
  * @post Donades dues adreces LUMI, construeix i envia, un missatge de localitzacio al servidor. Retorna el nombre de bytes si tot ha anat be, -1 si hi ha hagut error
  */
-int LUMI_construirMissatgeLoc(const char * miss, const char * adrLumiLoc, int nBytesLoc, char * missLoc, int LogFile); 
+int LUMI_construirMissatgeLoc(const char * miss, const char * adrLumiLoc, int nBytesLoc, char * missLoc, int LogFile,char * adrLumiRem, int nBytesRem); 
 
 /**
  * @brief Extreu IP i port del missatge
