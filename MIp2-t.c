@@ -281,7 +281,7 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
     adrrem.sin_family = AF_INET;
     adrrem.sin_port = htons(portUDPrem);
     adrrem.sin_addr.s_addr = inet_addr(IPrem);
-    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, sizeof(adrrem));
+    int nBytes = sendto(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr*) &adrrem, sizeof (adrrem));
     return nBytes;
 }
 
@@ -299,12 +299,12 @@ int UDP_EnviaA(int Sck, const char *IPrem, int portUDPrem, const char *SeqBytes,
 int UDP_RepDe(int Sck, char *IPrem, int *portUDPrem, char *SeqBytes, int LongSeqBytes) {
     struct sockaddr_in addrrem;
     int laddRem;
-    laddRem = sizeof(addrrem);
-    int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrrem,&laddRem);
+    laddRem = sizeof (addrrem);
+    int nBytes = recvfrom(Sck, SeqBytes, LongSeqBytes, 0, (struct sockaddr *) &addrrem, &laddRem);
     //UDP_TrobaAdrSockRem(Sck,IPrem,&(*portUDPrem));
     strcpy(IPrem, inet_ntoa(addrrem.sin_addr));
     *portUDPrem = htons(addrrem.sin_port);
-    
+
     return nBytes;
 }
 
@@ -342,9 +342,9 @@ int UDP_DemanaConnexio(int Sck, const char *IPrem, int portUDPrem) {
     addrem.sin_port = htons(portUDPrem);
     addrem.sin_addr.s_addr = inet_addr(IPrem);
     int i = 0;
-    for (i;i < 8; i++)
+    for (i; i < 8; i++)
         addrem.sin_zero[i] = '\0';
-    int conx = connect(Sck,(struct sockaddr *)&addrem,sizeof(addrem));
+    int conx = connect(Sck, (struct sockaddr *) &addrem, sizeof (addrem));
     return conx;
 }
 
@@ -356,7 +356,7 @@ int UDP_DemanaConnexio(int Sck, const char *IPrem, int portUDPrem) {
 
 /* Retorna -1 si hi ha error; el nombre de bytes enviats si tot va bé.    */
 int UDP_Envia(int Sck, const char *SeqBytes, int LongSeqBytes) {
-    return TCP_Envia(Sck,SeqBytes,LongSeqBytes);//ES LEGAL ?
+    return TCP_Envia(Sck, SeqBytes, LongSeqBytes); //ES LEGAL ?
 }
 
 /* Rep a través del socket UDP “connectat” d’identificador “Sck” una      */
@@ -367,7 +367,7 @@ int UDP_Envia(int Sck, const char *SeqBytes, int LongSeqBytes) {
 
 /* Retorna -1 si hi ha error; el nombre de bytes rebuts si tot va bé.     */
 int UDP_Rep(int Sck, char *SeqBytes, int LongSeqBytes) {
-    return TCP_Rep(Sck,SeqBytes,LongSeqBytes);
+    return TCP_Rep(Sck, SeqBytes, LongSeqBytes);
 }
 
 /* Donat el socket UDP “connectat” d’identificador “Sck”, troba l’adreça  */
@@ -378,7 +378,7 @@ int UDP_Rep(int Sck, char *SeqBytes, int LongSeqBytes) {
 
 /* Retorna -1 si hi ha error; un valor positiu qualsevol si tot va bé.    */
 int UDP_TrobaAdrSockRem(int Sck, char *IPrem, int *portUDPrem) {
-    return TCP_TrobaAdrSockRem(Sck,IPrem,*&portUDPrem);
+    return TCP_TrobaAdrSockRem(Sck, IPrem, *&portUDPrem);
 }
 
 /* Examina simultàniament i sense límit de temps (una espera indefinida)  */
@@ -390,23 +390,27 @@ int UDP_TrobaAdrSockRem(int Sck, char *IPrem, int *portUDPrem) {
 
 /* sockets, retorna l’identificador d’aquest socket.                      */
 int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck) {
-     fd_set conjunt;
+    fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    FD_SET(LlistaSck[1], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, NULL);
+    int i;
+    int max = LlistaSck[0];
+    for (i = 0; i < LongLlistaSck;i++) {
+        FD_SET(LlistaSck[i], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+        if (LlistaSck[i] > max) max = LlistaSck[i];
+    }
+    int sel = select(max + 1, &conjunt, NULL, NULL, NULL);
     int descActiu;
     if (sel != -1) {
-        int i = 0;
-        for (i; i <= LongLlistaSck; i++)
+        i = 0;
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }
     } else {
         descActiu = -1;
     }
-    
+
     return descActiu;
 }
 
@@ -418,27 +422,31 @@ int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck) {
 /* Retorna -1 si hi ha error; si arriba alguna cosa per algun dels        */
 
 /* sockets, retorna l’identificador d’aquest socket.                      */
-int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck,int temps) {
+int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck, int temps) {
     struct timeval tv;
     tv.tv_sec = temps;
     tv.tv_usec = 0;
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    FD_SET(LlistaSck[1], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, &tv);
+    int i;
+    int max = LlistaSck[0];
+    for (i = 0; i < LongLlistaSck;i++) {
+        FD_SET(LlistaSck[i], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+        if (LlistaSck[i] > max) max = LlistaSck[i];
+    }
+    int sel = select(max + 1, &conjunt, NULL, NULL, &tv);
     int descActiu;
     if (sel != -1) {
-        int i = 0;
-        for (i; i <= LongLlistaSck; i++)
+        i = 0;
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }
     } else {
         descActiu = -1;
     }
-    
+
     return descActiu;
 }
 
@@ -479,7 +487,7 @@ int TCP_seleccionaInterficie(char * ipLoc) {
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
             if (i == res) {
                 strcpy(ipLoc, host);
-                
+
             }
             i++;
         }

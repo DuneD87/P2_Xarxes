@@ -248,26 +248,21 @@ int LUMI_IniciaSckEscolta(const char *ipLoc, int portUDP) {
 
 int LUMI_haArribatAlgunaCosa(int sckEsc, int sckTCP) {
    
-    int max = sckEsc;
-    if (sckTCP > max)
-        max = sckTCP;
+    
     int conjunt[2];
     conjunt[0] = sckTCP;
     conjunt[1] = sckEsc;
-    int descActiu = T_HaArribatAlgunaCosa(conjunt, max);
+    int descActiu = T_HaArribatAlgunaCosa(conjunt, 2);
     
     return descActiu;
 }
 
 int LUMI_haArribatAlgunaCosaEnTemps(int sck, int sckTCP, int temps) {
     
-    int max = sck;
-    if (sckTCP > max)
-        max = sckTCP;
     int conjunt[2];
     conjunt[0] = sckTCP;
     conjunt[1] = sck;
-    int descActiu = T_HaArribatAlgunaCosaEnTemps(conjunt, max, temps);
+    int descActiu = T_HaArribatAlgunaCosaEnTemps(conjunt, 2, temps);
     return descActiu;
 }
 
