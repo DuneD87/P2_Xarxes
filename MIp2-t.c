@@ -393,14 +393,17 @@ int T_HaArribatAlgunaCosa(const int *LlistaSck, int LongLlistaSck) {
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-
-    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-
-    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, NULL);
+    int i;
+    int max = LlistaSck[0];
+    for (i = 0; i < LongLlistaSck;i++) {
+        FD_SET(LlistaSck[i], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+        if (LlistaSck[i] > max) max = LlistaSck[i];
+    }
+    int sel = select(max + 1, &conjunt, NULL, NULL, NULL);
     int descActiu;
     if (sel != -1) {
-        int i = 0;
-        for (i; i <= LongLlistaSck; i++)
+        i = 0;
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }
@@ -426,14 +429,17 @@ int T_HaArribatAlgunaCosaEnTemps(const int *LlistaSck, int LongLlistaSck, int te
     fd_set conjunt;
     FD_ZERO(&conjunt); /* esborrem el contingut de la llista */
     FD_SET(0, &conjunt); /* afegim (“marquem”) el teclat a la llista */
-    FD_SET(LlistaSck[0], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
-
-
-    int sel = select(LongLlistaSck + 1, &conjunt, NULL, NULL, &tv);
+    int i;
+    int max = LlistaSck[0];
+    for (i = 0; i < LongLlistaSck;i++) {
+        FD_SET(LlistaSck[i], &conjunt); /* afegim (“marquem”) el socket connectat a la llista */
+        if (LlistaSck[i] > max) max = LlistaSck[i];
+    }
+    int sel = select(max + 1, &conjunt, NULL, NULL, &tv);
     int descActiu;
     if (sel != -1) {
-        int i = 0;
-        for (i; i <= LongLlistaSck; i++)
+        i = 0;
+        for (i; i <= max; i++)
             if (FD_ISSET(i, &conjunt)) {
                 descActiu = i;
             }

@@ -391,7 +391,7 @@ int LUMIS_ServeixPeticions(int sck, taulaClients *taulaCli, int logFile) {
 int LUMIS_HaArribatAlgunaCosa(int sckEsc) {
     int conjunt[1];
     conjunt[0] = sckEsc;
-    int descActiu = T_HaArribatAlgunaCosa(conjunt, sckEsc);
+    int descActiu = T_HaArribatAlgunaCosa(conjunt, 1);
 
     return descActiu;
 }
